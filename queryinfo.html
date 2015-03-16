@@ -1,0 +1,1288 @@
+<html>
+<head>
+    <!-- <meta http-equiv="content-type" content="text/html; charset=UTF-8" /> -->
+    <meta http-equiv="content-type" content="text/html; charset=gb2312" />
+    <style type="text/css">
+        #alertMsg {
+            display: none;
+            width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 1px 1px 10px black;
+            padding: 10px;
+            font-size: 12px;
+            position: absolute;
+            text-align: center;
+            background: #fff;
+            z-index: 100000;
+        }
+
+        #alertMsg_info {
+            padding: 2px 15px;
+            line-height: 1.6em;
+            text-align: left;
+        }
+
+        #alertMsg_btn1, #alertMsg_btn2 {
+            display: inline-block;
+            background: url(images/gray_btn.png) no-repeat left top;
+            padding-left: 3px;
+            color: #000000;
+            font-size: 12px;
+            text-decoration: none;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #alertMsg_btn1 cite, #alertMsg_btn2 cite {
+            line-height: 24px;
+            display: inline-block;
+            padding: 0 13px 0 10px;
+            background: url(images/gray_btn.png) no-repeat right top;
+            font-style: normal;
+        }
+
+    </style>
+    <style type="text/css"> 
+        .div-a{ float:left;width:14%;height:100%;border:1px solid #F00; overflow:auto;}
+        .div-b{ float:right;width:85%;height:88%;border:1px solid #000;overflow:auto} 
+        .div-c{border:1px solid #000;overflow:auto;}
+        .div-d{height:40px;border:1px solid #000;overflow:auto;}
+        .div-e{float:right; width:85%;height:95px;border:1px solid #000;white-space: nowrap;}
+        .textinput{width:50%}
+        .sqlinput{width:85%;height:88px}
+        td {
+            width: 1px;   
+            white-space: nowrap; // 自适应宽度   
+            word-break:  keep-all; // 避免长单词截断，保持全部  
+            align:center;            
+        }
+        .table{ 
+            border-color: #d2f1ac; 
+            border-collapse: collapse; 
+            border-top: 1px solid #ffffff;
+        }
+        label {
+            white-space: nowrap; // 自适应宽度   
+            word-break:  keep-all; // 避免长单词截断，保持全部
+            text-align:center;
+        }
+        .fixedtd{ 
+            position: relative; 
+            z-index: 1; 
+            background: #009933; 
+            text-align: center; 
+            background-clip: border-box    
+            background-clip: padding-box
+            background-clip: content-box
+            background-clip: inherit
+        } 
+
+    </style> 
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.1.js"></script>
+    <script type="text/javascript" src="http://blog.faultylabs.com/files/md5.js"></script>
+
+    <script>
+        function alertMsg(msg, mode) { //mode为空，即只有一个确认按钮，mode为1时有确认和取消两个按钮
+            msg = msg || '';
+            mode = mode || 0;
+            var top = document.body.scrollTop || document.documentElement.scrollTop;
+            var isIe = (document.all) ? true : false;
+            var isIE6 = isIe && !window.XMLHttpRequest;
+            var sTop = document.documentElement.scrollTop || document.body.scrollTop;
+            var sLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+            var winSize = function(){
+                var xScroll, yScroll, windowWidth, windowHeight, pageWidth, pageHeight;
+                // innerHeight获取的是可视窗口的高度，IE不支持此属性
+                if (window.innerHeight && window.scrollMaxY) {
+                    xScroll = document.body.scrollWidth;
+                    yScroll = window.innerHeight + window.scrollMaxY;
+                } else if (document.body.scrollHeight > document.body.offsetHeight) { // all but Explorer Mac
+                    xScroll = document.body.scrollWidth;
+                    yScroll = document.body.scrollHeight;
+                } else { // Explorer Mac...would also work in Explorer 6 Strict, Mozilla and Safari
+                    xScroll = document.body.offsetWidth;
+                    yScroll = document.body.offsetHeight;
+                }
+
+                if (self.innerHeight) {    // all except Explorer
+                    windowWidth = self.innerWidth;
+                    windowHeight = self.innerHeight;
+                } else if (document.documentElement && document.documentElement.clientHeight) { // Explorer 6 Strict Mode
+                    windowWidth = document.documentElement.clientWidth;
+                    windowHeight = document.documentElement.clientHeight;
+                } else if (document.body) { // other Explorers
+                    windowWidth = document.body.clientWidth;
+                    windowHeight = document.body.clientHeight;
+                }
+
+                // for small pages with total height less then height of the viewport
+                if (yScroll < windowHeight) {
+                    pageHeight = windowHeight;
+                } else {
+                    pageHeight = yScroll;
+                }
+
+                // for small pages with total width less then width of the viewport
+                if (xScroll < windowWidth) {
+                    pageWidth = windowWidth;
+                } else {
+                    pageWidth = xScroll;
+                }
+
+                return{
+                    'pageWidth':pageWidth,
+                    'pageHeight':pageHeight,
+                    'windowWidth':windowWidth,
+                    'windowHeight':windowHeight
+                }
+            }();
+            //alert(winSize.pageWidth);
+            //遮罩层
+            var styleStr = 'top:0;left:0;position:absolute;z-index:10000;background:#666;width:' + winSize.pageWidth + 'px;height:' +  (winSize.pageHeight + 30) + 'px;';
+            styleStr += (isIe) ? "filter:alpha(opacity=80);" : "opacity:0.8;"; //遮罩层DIV
+            var shadowDiv = document.createElement('div'); //添加阴影DIV
+            shadowDiv.style.cssText = styleStr; //添加样式
+            shadowDiv.id = "shadowDiv";
+            //如果是IE6则创建IFRAME遮罩SELECT
+            if (isIE6) {
+                var maskIframe = document.createElement('iframe');
+                maskIframe.style.cssText = 'width:' + winSize.pageWidth + 'px;height:' + (winSize.pageHeight + 30) + 'px;position:absolute;visibility:inherit;z-index:-1;filter:alpha(opacity=0);';
+                maskIframe.frameborder = 0;
+                maskIframe.src = "about:blank";
+                shadowDiv.appendChild(maskIframe);
+            }
+            document.body.insertBefore(shadowDiv, document.body.firstChild); //遮罩层加入文档
+            //弹出框
+            var styleStr1 = 'display:block;position:fixed;_position:absolute;left:' + (winSize.windowWidth / 2 - 200) + 'px;top:' + (winSize.windowHeight / 2 - 150) + 'px;_top:' + (winSize.windowHeight / 2 + top - 150)+ 'px;'; //弹出框的位置
+            var alertBox = document.createElement('div');
+            alertBox.id = 'alertMsg';
+            alertBox.style.cssText = styleStr1;
+            //创建弹出框里面的内容P标签
+            var alertMsg_info = document.createElement('P');
+            alertMsg_info.id = 'alertMsg_info';
+            alertMsg_info.innerHTML = msg;
+            alertBox.appendChild(alertMsg_info);
+            //创建按钮
+            var btn1 = document.createElement('a');
+            btn1.id = 'alertMsg_btn1';
+            btn1.href = 'javas' + 'cript:void(0)';
+            btn1.innerHTML = '<cite>确定</cite>';
+            btn1.onclick = function () {
+                document.body.removeChild(alertBox);
+                document.body.removeChild(shadowDiv);
+                return true;
+            };
+            //alertBox.appendChild(btn1);
+            if (mode === 1) {
+                var btn2 = document.createElement('a');
+                btn2.id = 'alertMsg_btn2';
+                btn2.href = 'javas' + 'cript:void(0)';
+                btn2.innerHTML = '<cite>取消</cite>';
+                btn2.onclick = function () {
+                    document.body.removeChild(alertBox);
+                    document.body.removeChild(shadowDiv);
+                    return false;
+                };
+                alertBox.appendChild(btn2);
+            }
+            document.body.appendChild(alertBox);
+            UpdateStatusText = function(msg) {
+                alertMsg_info.innerHTML = msg;
+            };
+            CloseAlert = function() {
+                document.body.removeChild(alertBox);
+                document.body.removeChild(shadowDiv);
+            }
+            var op = {
+                update : UpdateStatusText,
+                close : CloseAlert
+            };
+            return op;
+        }
+    </script>
+    <script>
+        /**
+        *
+        *  Base64 encode / decode
+        *
+        *  @author haitao.tu
+        *  @date   2010-04-26
+        *  @email  tuhaitao@foxmail.com
+        *
+        */
+         
+        function Base64() {
+         
+            // private property
+            _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+         
+            // public method for encoding
+            this.encode = function (input) {
+                var output = "";
+                var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+                var i = 0;
+                input = _utf8_encode(input);
+                while (i < input.length) {
+                    chr1 = input.charCodeAt(i++);
+                    chr2 = input.charCodeAt(i++);
+                    chr3 = input.charCodeAt(i++);
+                    enc1 = chr1 >> 2;
+                    enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                    enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                    enc4 = chr3 & 63;
+                    if (isNaN(chr2)) {
+                        enc3 = enc4 = 64;
+                    } else if (isNaN(chr3)) {
+                        enc4 = 64;
+                    }
+                    output = output +
+                    _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
+                    _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
+                }
+                return output;
+            }
+         
+            // public method for decoding
+            this.decode = function (input) {
+                var output = "";
+                var chr1, chr2, chr3;
+                var enc1, enc2, enc3, enc4;
+                var i = 0;
+                input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+                while (i < input.length) {
+                    enc1 = _keyStr.indexOf(input.charAt(i++));
+                    enc2 = _keyStr.indexOf(input.charAt(i++));
+                    enc3 = _keyStr.indexOf(input.charAt(i++));
+                    enc4 = _keyStr.indexOf(input.charAt(i++));
+                    chr1 = (enc1 << 2) | (enc2 >> 4);
+                    chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                    chr3 = ((enc3 & 3) << 6) | enc4;
+                    output = output + String.fromCharCode(chr1);
+                    if (enc3 != 64) {
+                        output = output + String.fromCharCode(chr2);
+                    }
+                    if (enc4 != 64) {
+                        output = output + String.fromCharCode(chr3);
+                    }
+                }
+                output = _utf8_decode(output);
+                return output;
+            }
+         
+            // private method for UTF-8 encoding
+            _utf8_encode = function (string) {
+                string = string.replace(/\r\n/g,"\n");
+                var utftext = "";
+                for (var n = 0; n < string.length; n++) {
+                    var c = string.charCodeAt(n);
+                    if (c < 128) {
+                        utftext += String.fromCharCode(c);
+                    } else if((c > 127) && (c < 2048)) {
+                        utftext += String.fromCharCode((c >> 6) | 192);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    } else {
+                        utftext += String.fromCharCode((c >> 12) | 224);
+                        utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    }
+         
+                }
+                return utftext;
+            }
+         
+            // private method for UTF-8 decoding
+            _utf8_decode = function (utftext) {
+                var string = "";
+                var i = 0;
+                var c = c1 = c2 = 0;
+                while ( i < utftext.length ) {
+                    c = utftext.charCodeAt(i);
+                    if (c < 128) {
+                        string += String.fromCharCode(c);
+                        i++;
+                    } else if((c > 191) && (c < 224)) {
+                        c2 = utftext.charCodeAt(i+1);
+                        string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                        i += 2;
+                    } else {
+                        c2 = utftext.charCodeAt(i+1);
+                        c3 = utftext.charCodeAt(i+2);
+                        string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                        i += 3;
+                    }
+                }
+                return string;
+            }
+        }
+
+    </script>
+    <script>
+        function xmlToJson(xml) {
+         
+        // Create the return object
+            var obj = {};
+         
+            if (xml.nodeType == 1) { // element
+                // do attributes
+                if (xml.attributes.length > 0) {
+                obj["@attributes"] = {};
+                    for (var j = 0; j < xml.attributes.length; j++) {
+                        var attribute = xml.attributes.item(j);
+                        obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+                    }
+                }
+            } else if (xml.nodeType == 3) { // text
+                obj = xml.nodeValue;
+            }
+         
+            // do children
+            if (xml.hasChildNodes()) {
+                for(var i = 0; i < xml.childNodes.length; i++) {
+                    var item = xml.childNodes.item(i);
+                    var nodeName = item.nodeName;
+                    if (typeof(obj[nodeName]) == "undefined") {
+                        obj[nodeName] = xmlToJson(item);
+                    } else {
+                        if (typeof(obj[nodeName].length) == "undefined") {
+                            var old = obj[nodeName];
+                            obj[nodeName] = [];
+                            obj[nodeName].push(old);
+                        }
+                        obj[nodeName].push(xmlToJson(item));
+                    }
+                }
+            }
+            return obj;
+        }
+    </script>
+    <script>
+        function getExcelFileName() { 
+            var d = new Date(); 
+            var curYear = d.getYear(); 
+            var curMonth = "" + (d.getMonth() + 1); 
+            var curDate = "" + d.getDate(); 
+            var curHour = "" + d.getHours(); 
+            var curMinute = "" + d.getMinutes(); 
+            var curSecond = "" + d.getSeconds(); 
+            if (curMonth.length == 1) { 
+                curMonth = "0" + curMonth; 
+            } 
+            if (curDate.length == 1) { 
+                curDate = "0" + curDate; 
+            } 
+            if (curHour.length == 1) { 
+                curHour = "0" + curHour; 
+            } 
+            if (curMinute.length == 1) { 
+                curMinute = "0" + curMinute; 
+            } 
+            if (curSecond.length == 1) { 
+                curSecond = "0" + curSecond; 
+            } 
+            var fileName = globalTableName + "_" + curYear + curMonth + curDate + "_" 
+                    + curHour + curMinute + curSecond + ".xls"; 
+            //alert(fileName); 
+            return fileName; 
+        } 
+        function ExportToExcel(dataArray) { 
+            try{
+                var oXL = new ActiveXObject("Excel.Application"); 
+                //创建AX对象excel  
+                var oWB = oXL.Workbooks.Add();
+                //获取workbook对象  
+                var oSheet = oWB.ActiveSheet;
+                var lenRow = dataArray.length; 
+                //取得表格行数  
+                for (i = 0; i < lenRow; i++) 
+                { 
+                    var j = 0;
+                    for (var key in dataArray[i])
+                    {
+                        if (i == 0) {
+                            oSheet.Cells(i + 1, j + 1).value = key;//dataArray[i][key];
+                        }
+                        oSheet.Cells(i + 2, j + 1).value = "'" + dataArray[i][key];
+                        j++;
+                    } 
+                } 
+                oXL.Visible = true; 
+                //设置excel可见属性 
+                var fileName = getExcelFileName();
+                var fname = oXL.Application.GetSaveAsFilename(fileName, "Excel Spreadsheets (*.xls), *.xls");                
+                oWB.SaveAs(fname);
+                oWB.Close();
+                oXL.Quit();
+              }catch(e){ 
+                    if((!+'\v1')){ //ie浏览器  
+                      alert("无法启动Excel，请确保电脑中已经安装了Excel!\n\n如果已经安装了Excel，"+"请调整IE的安全级别。\n\n具体操作：\n\n"+"工具 → Internet选项 → 安全 → 自定义级别 → ActiveX 控件和插件 → 对未标记为可安全执行脚本的ActiveX 控件初始化并执行脚本 → 启用 → 确定"); 
+                   }else{ 
+                       alert("请使用IE浏览器进行“导入到EXCEL”操作！");  //方便设置安全等级，限制为ie浏览器  
+                   } 
+               } 
+        }
+    </script>
+    <script>
+        var globalArray;
+        var globalUrl;
+        var globalTableName;
+        var globalInfo;
+        var globalAscSort;
+        var globalMethod;
+        var globalSearchField;
+        var globalStart;
+        var globalEnd;
+        var searchField;
+        var globalWords;
+        var globalBtnObj;
+        var globalLastTable;
+        var globalExportXls = false;
+        var globalNeedRecreateSelect = false;
+        var globalStopLoad = false;
+
+        function thradioclick(obj) {
+            searchField = document.getElementById('search_field');
+            searchField.value = obj.innerHTML;
+        }
+        function tdonclick(obj) {
+            globalWords = document.getElementById('search_keywords');
+            globalWords.value = obj.innerText;
+        }
+
+        function recharge(id) {
+            //alert(id);
+            var sign = faultylabs.MD5("id="+id+"www.anzhuoshangdian.com");
+            sign = sign.toLowerCase();
+            var rechargeUrl = server_name() + "user/manualrecharge/?id="+id+"&sign="+sign;
+            //alert(rechargeUrl);
+            $.ajax({
+            url:rechargeUrl,
+            type:"GET",
+            datatype:"JSON",
+            success:function(json){
+               if(typeof json != 'undefined')
+               {
+                    var obj = eval("(" + json + ")");
+                    alert("error : " + obj.error + "\nmsg : " + obj.msg);
+               }
+            }
+            });
+        }
+        function refuse(id) {
+            //alert(id);
+            var sign = faultylabs.MD5("id="+id+"www.anzhuoshangdian.com");
+            sign = sign.toLowerCase();
+            var refuseUrl = server_name() + "user/refuserecharge/?id="+id+"&sign="+sign
+            //alert(refuseUrl);
+            $.ajax({
+            url:refuseUrl,
+            type:"GET",
+            datatype:"JSON",
+            success:function(json){
+               if(typeof json != 'undefined')
+               {
+                    var obj = eval("(" + json + ")");
+                    alert("code : " + obj.code + "\nmsg : " + obj.msg);
+               }
+            }
+            });
+        }
+        
+        function checkPhoneNumber(obj, phone) {
+            var phoneNumber = "";
+            if (phone.indexOf("+86") != -1) {
+                phoneNumber = phone.substring("+86".length);
+            } else {
+                phoneNumber = phone;
+            }
+            //alert("phoneNumber : " + phoneNumber);
+            var url = "http://life.tenpay.com/cgi-bin/mobile/MobileQueryAttribution.cgi?chgmobile=" + phoneNumber;
+            //alert(url);
+            //var url = "http://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel=" + phoneNumber;
+            $.ajax(
+                {
+                    url : url,
+                    async:true,
+                    type : "GET",
+                    dataType: 'xml',
+                    success : function (data) {
+                        var province = $(data).find("province").text();
+                        var city = $(data).find("city").text();
+                        var supplier = $(data).find("supplier").text();
+                        var display = province + city + supplier;
+                        obj.innerHTML = "<font color=red>" + display + "</font>";
+                    },
+                    error: function(obj, e, e2) {
+                        document.getElementById('show_result').innerText = e2;
+                    }
+                }
+            );
+        }
+        function getObj(row, col, key, jsonObj, realRow) {
+            var extra = "";
+            //alert(row + " - " + key + " - " + col);
+            if (row == 0) {
+                return "<th bgcolor=gray style='fixedtd;white-space:nowrap' onclick='thradioclick(this);'>" + key + "</th>";
+            }
+            if (col == 0) {
+                return "<td id=" + realRow + " onclick='onRowClick(this);'><font size=3 color='red'>" + realRow + "</font></td>";
+            }
+
+            var eValue = eval("jsonObj."+ key);
+            
+            if (eValue == null) {
+                eValue = "";
+            }
+
+            var exchange = false;
+            var label = "<label onclick='tdonclick(this);'>" + eValue + "</label>";
+
+            var reg = new RegExp("^[0-9]*$");
+
+            if (key == "lasttime" || key == "regtime" || key == "addtime") {
+                if(reg.test(eValue)){
+                    extra = "&nbsp;&nbsp;<label><font color=red>[" + secondsTimetoString(parseInt(eValue + "000")) + "]</font></label>";
+                    exchange = true;
+                }
+            }
+            if (key == "timestamp" || key == "time") {
+                if(reg.test(eValue)){
+                    extra = "&nbsp;&nbsp;<label><font color=red>[" + secondsTimetoString(parseInt(eValue)) + "]</font></label>";
+                    exchange = true;
+                }
+            }
+
+            <!--添加充值按钮 BEGIN-->
+            if (globalTableName == "mk_security_recharge" && key == "status") {
+                if (jsonObj[key] == "0") {
+                    var id = jsonObj.id;
+                    extra += "&nbsp;&nbsp;<button onclick='recharge("+id+");'>充值</button>";
+                    extra += "&nbsp;<button onclick='refuse("+id+");'>拒绝</button>";
+                } else if (jsonObj[key] == "1") {
+                    extra += "&nbsp;&nbsp;<label>充值成功</label>";
+                } else if (jsonObj[key] == "2") {
+                    extra += "&nbsp;&nbsp;<label>已拒绝</label>";
+                }
+            }
+            <!--添加充值按钮 END-->
+
+            <!-- 添加号码归属地查询 BEGIN-->
+            if (key == "ph" || key == "loginnum" || key == "phonenum" 
+                    || key == "phone_num" || key == "create_by"
+                    || key == "invitee_phone" || key == "inviter_phone"
+                    || key == "phone") {
+                var phoneNumber = eval();
+                if (eValue != "" && eValue != "null") {
+                    extra = "&nbsp;<button onclick=\"checkPhoneNumber(this,\'" + eValue + "\');\">号码归属地</button>"
+                }
+            }
+            <!-- 添加号码归属地查询 END-->
+            if (exchange == true) {
+                var tmp = label;
+                label = extra;
+                extra = tmp;
+            }
+            return "<td><div style='white-space:nowrap;'>" + label + extra + "</div></td>";
+        }
+
+        var s = 0;
+        var interval = 0;
+        function dataloading() {
+            s++;
+            var tips = "<font size=3>" + globalInfo + " <br>正在加载... " + s + "s" + "</font>";
+            document.getElementById('show_title').innerHTML = tips;
+        }
+        function requestUrl() {
+            s = 0;
+            if (interval != 0) {
+                clearInterval(interval);
+            }
+            interval = setInterval("dataloading()", 1000);
+
+            jQuery.support.cors = true;
+
+            $.ajax(
+                {
+                    url : globalUrl,
+                    type : "GET",
+                    dataType: 'JSON',
+                    success : onDataResponse,
+                    error: function(obj, e, e2) {
+                        if (interval != 0) {
+                            clearInterval(interval);
+                        }
+                        //alert(obj.status + " : " + e + " : " + e2);
+                        //alert(e2);
+                        document.getElementById('show_result').innerText = e2;
+                    }
+                }
+            );
+        }
+
+         /***
+         * 判断返回是否json格式
+         */
+        function isJson(obj){
+            return typeof(obj) == "object";
+        }
+
+        function sortInternal(data) {
+            var tmpObj;
+            var obj=document.getElementsByName('sort_method');
+            globalAscSort = obj[0].checked;
+
+            var sel_obj = document.getElementById("sort_field");
+            var index = sel_obj.selectedIndex;
+            globalMethod = sel_obj.options[index].value
+            try {
+                var definedMethod = eval(globalMethod);
+                tmpObj = data.sort(definedMethod);
+            }catch(e) {
+                tmpObj = data;
+            }
+            return tmpObj;
+        }
+        function onDataResponse(data, status) {
+            if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
+            displayResultData(data, status);
+        }
+        function displayResultData(data, status) {
+            //alert(data);
+            clearInterval(interval);
+            interval = 0;
+            var docobj = document.getElementById('json_url_addr');
+            docobj.value = globalUrl;
+            var checkBox = document.getElementById('remove_dup');
+            var tmpObj = data;
+            if ((globalTableName == "mk_collection_wifi" || globalTableName == "mk_collection_terminal") && checkBox.checked) {
+                tmpObj = removeDup(data);
+            }
+
+            if (tmpObj.length > 0 && globalNeedRecreateSelect) {
+                createSelectValues(tmpObj);
+                globalNeedRecreateSelect = true;
+            }
+            if (document.getElementById("loadmode").checked) {
+                showTableFromJsonFormat(tmpObj);
+            } else {
+                showTableFromJsonFormat2(tmpObj);
+            }
+            
+            showStatusInfo();
+
+            if (data.length == undefined) {
+                showJsonObj(data);
+            } else {
+            
+            }
+        }
+        function generateKeyArray(jsonObj) {
+            var keyArray = new Array();
+            for (var key in jsonObj) {
+                keyArray.push(key);
+            }
+            keyArray.sort();
+            keyArray.unshift("序号");
+            return keyArray;
+        }
+        function showTableFromJsonFormat(data) {
+
+            var count = data.length;
+            var fields = generateKeyArray(data[0]);
+            var strTable = "<table id='datatable' align=left class='table' border='1'>";
+            var realRow = 0;
+
+            for (var row = 0; row < count + 1; row++) {
+                strTable += "<tr>"
+                for (var col=0; col < fields.length; col++) {
+                    strTable += getObj(row, col, fields[col], data[row-1], realRow);
+                }
+                realRow++;
+                strTable += "</tr>"
+            }
+            globalCount = realRow - 1;
+            strTable += "</table>"
+            document.getElementById('show_result').innerHTML = strTable;
+        }
+        function getType(o) { 
+            var _t; return ((_t = typeof(o)) == "object" ? o==null && "null" || Object.prototype.toString.call(o).slice(8,-1):_t);//.toLowerCase(); 
+        }
+        function showTableFromJsonFormat2(data) {
+            document.getElementById('show_result').innerHTML = "";
+            var count = data.length;
+            var fields = generateKeyArray(data[0]);
+            var tableObj = document.createElement('table');
+            tableObj.id = "datatable";
+            tableObj.border = "1";
+            tableObj.align = "left";
+            var row = 0;
+            showEveryRow = function() {
+                var trObj = tableObj.insertRow();
+                var strTable = "";
+                for (var col=0; col < fields.length; col++) {
+                    strTable += getObj(row, col, fields[col], data[row-1], row);
+                }
+                //alert(getType(trObj));
+                trObj.innerHTML = strTable;
+                tableObj.appendChild(trObj);
+                if (row > 0) {
+                    var statusText = "正在生成第" + row + "行";
+                    document.getElementById('show_title').innerHTML = statusText;
+                }
+                //alert(strTable);
+                row++;
+                if (row >= count + 1) {
+                    showStatusInfo();
+                } else {
+                    if (!globalStopLoad) {
+                        setTimeout(showEveryRow, 0);
+                    } else {
+                        globalStopLoad = false;
+                    }
+                }
+            };
+            setTimeout(showEveryRow, 0);
+            globalCount = count;
+            document.getElementById('show_result').appendChild(tableObj);
+        }
+        function showStatusInfo() {
+            if (globalInfo == undefined) {
+                globalInfo = "SQL查询";
+            }
+            var str = "<font size=3 color=red>" + globalInfo + ":" + globalCount + "</font>";
+            document.getElementById('show_title').innerHTML = str;
+        }
+
+        function createSelectValues(obj) {
+            var selectObj = document.getElementById("sort_field");
+            selectObj.selectedIndex = 0;
+            for (var o in selectObj.options) {
+                selectObj.options.remove(o);
+            }
+
+            var keyArray = new Array();
+            for (var key in obj[0]) {
+                keyArray.push(key);
+            }
+            keyArray.sort();
+            
+            selectObj.options.add(new Option("No Sort",""));
+            for (var key in keyArray) {
+                selectObj.options.add(new Option(keyArray[key],keyArray[key]));
+            }
+        }
+        /*
+        去除android_uid重复的字段        
+        */
+        function removeDup(data) {
+            var json = {};
+            var count = data.length;
+            for (var i = 0; i < count; i++) {
+                json[data[i].android_uid] = data[i];
+            }
+            var tmpArray = new Array();
+
+            for (var key in json) {
+                tmpArray.push(json[key]);
+            }
+            return tmpArray;
+        }
+        var globalRowId = 0;
+        function onRowClick(obj) {
+            var id = obj.id;
+            var strId = "" + id;
+            if (id == globalRowId) {
+                //return ;
+            }
+            var trObj = document.getElementById(id);
+            trObj = trObj.parentNode;
+            var tr = document.getElementsByTagName('tr');
+            var blueStyle = "background-color:#AAF";
+            var whiteStyle = "background-color:#FFF";
+            var value = strId.indexOf("selected-");
+            //alert(value);
+            if (value == -1) {
+                trObj.style.cssText = blueStyle;
+                obj.id = "selected-" + id;
+            } else {
+                trObj.style.cssText = whiteStyle;
+                obj.id = id.substring(9);
+            }
+            //alert(obj.id);
+            /*
+            if (id % 2 == 0) {
+                trObj.style.cssText = blueStyle;
+            } else {
+                trObj.style.cssText = whiteStyle;
+            }*/
+            /*
+            for (var index = 0; index < tr.length; index++) {
+                //alert(tr[index].id);
+                if (tr[index].id == id) {
+                    tr[index].style.cssText = blueStyle;
+                } else {
+                    tr[index].style.cssText = whiteStyle;
+                }
+            }*/
+            globalRowId = id;
+        }
+        /*
+        *json 生成表格形式,暂时没有使用
+        */
+        function jsonToTable(data) {
+            if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
+            var count = data.length;
+            var strTable = "<table border=1>";
+            var jsonObj;
+            var tempStr='';
+            var row;
+            var tmp;
+            for (row = 0; row < count; row++) {
+
+                jsonObj = data[row];
+                if (row == 0) {
+                    /**
+                    *生成表头信息
+                    */
+                    strTable += "<tr>"
+                    tmp = 0;
+                    for (var key in jsonObj) {
+                        if (tmp == 0) {
+                            strTable += "<td>序号</td>";
+                        }
+                        strTable += "<td>" + key + "</td>";
+                        tmp = 1;
+                    }
+                    strTable += "</tr>"
+                }
+                strTable += "<tr>"
+                tmp = 0;
+                for (var key in jsonObj) {
+                    if (tmp == 0) {
+                        strTable += "<td><font size=3 color='red'>" + (row + 1) + "</font></td>";
+                    }
+                    strTable += "<td>" + jsonObj[key] + "</td>";
+                    tmp = 1;
+                }
+                strTable += "</tr>"
+            }
+            strTable += "</table>"
+            //alert(strTable);
+            return strTable;
+        }
+
+        function generateParamsUrl(url) {
+            var obj = document.getElementById('start_time');
+            globalStart = obj.value;
+            obj = document.getElementById('end_time');
+            globalEnd = obj.value;
+            if (globalStart != "" || globalStart != "") {
+                url += "?";
+            } else {
+                return url;
+            }
+
+            if (globalStart) {
+                url += "start=" + globalStart;
+                url += "&";
+            }
+            if (globalEnd) {
+                url += "end=" + globalEnd;
+            }
+            
+            return url;
+        }
+        
+        function setSql(str) {
+            var obj = document.getElementById('sql_input');
+            obj.value = str;
+        }
+        /*请求网络数据函数*/
+        function requestNetworkData(obj, tablename) {
+            globalNeedRecreateSelect = true;
+            document.getElementById("sort_field").options.length = 0;
+            requestNetworkDataLocked(obj, tablename);
+        }
+        function requestNetworkDataLocked(obj, tablename) {
+            globalBtnObj = obj;
+            globalInfo = obj.value;
+            globalTableName = tablename;
+            globalUrl = 'http://wlan.anzhuoshangdian.com/activity/queryInviteData/';
+            var sql = "select * from " + globalTableName + whereString() + sortString() + limitString();
+            setSql(sql);
+            exec_sql();
+        }
+        /*请求网络数据函数结束*/
+
+        function showjsonresult() {
+            var obj1 = document.getElementById('json_url_addr');
+            globalUrl = obj1.value;
+            requestUrl();
+        }
+
+        function stralign(str) {
+            if (str.length < 2) {
+                return "0" + str;
+            }
+            return str;
+        }
+        function secondsTimetoString(timelong) {
+            var date = new Date();
+            date.setTime(timelong);
+            var str = '';
+            str += date.getFullYear();
+            str += "-";
+            str += stralign(""+(date.getMonth() + 1))
+            str += "-";
+            str += stralign(""+date.getDate());
+            str += " ";
+            str += stralign(""+date.getHours());
+            str += ":";
+            str += stralign(""+date.getMinutes());
+            str += ":";
+            str += stralign(""+date.getSeconds());
+            return str;
+        }
+        function translateTime() {
+            var obj1 = document.getElementById('longtime');
+            var obj2 = document.getElementById('stringtime');
+            var reg = new RegExp("^[0-9]*$");
+            if(!reg.test(obj1.value) || obj1.value == ""){
+                alert("请输入数字!");
+                return ;
+            }
+            obj2.value = secondsTimetoString(obj1.value);
+        }
+        function getDateString(longtime) {
+            var date = new Date();
+            date.setTime(longtime);
+            var str = '';
+            str += date.getFullYear();
+            str += "-";
+            str += stralign(""+(date.getMonth() + 1))
+            str += "-";
+            str += stralign(""+date.getDate());
+            return str;
+        }
+        function settodaytime() {
+            var obj = document.getElementById('start_time');
+            var today = new Date();
+            var oneday = 24 * 3600 * 1000;
+            var nextDay = today.getTime() + oneday;
+            obj.value = getDateString(today.getTime());
+            obj = document.getElementById('end_time');
+            obj.value = getDateString(nextDay);
+        }
+
+        function cleartimebox() {
+            var obj = document.getElementById('start_time');
+            obj.value = "";
+            obj = document.getElementById('end_time');
+            obj.value = "";
+        }
+        function clear_search() {
+            var obj = document.getElementById('search_field');
+            obj.value = "";
+            obj = document.getElementById('search_keywords');
+            obj.value = "";
+        }
+        function showJsonObj(data) {
+            var str = "";
+            document.getElementById('show_result').innerText = JSON.stringify(data);
+            if (typeof(JsonUti) != undefined) {
+                document.getElementById('show_result').innerText = JsonUti.convertToString(data);
+            } else {
+                ocument.getElementById('show_result').innerText = JSON.stringify(data);
+            }
+        }
+
+        function sortString() {
+            var obj = document.getElementById("sort_field");
+            var sortField = "";
+
+            if (obj.selectedIndex != -1) {
+                sortField = obj.options[obj.selectedIndex].value;
+                if (sortField != "") {
+                    var radioObj=document.getElementsByName('sort_method');
+                    globalAscSort = radioObj[0].checked;
+                    if (globalAscSort) {
+                        return " order by " + sortField + " asc";
+                    } else {
+                        return " order by " + sortField + " desc";
+                    }
+                }
+            }
+            if (globalTableName == "mk_security_recharge") {
+                return " order by id desc";
+            }
+            return "";
+        }
+
+        function limitString() {
+            var obj = document.getElementById("limit");
+            if (obj.value != "" && obj.value > 0) {
+                return " limit " + obj.value;
+            }
+            return "";
+        }
+        function whereString() {
+            globalWords = document.getElementById('search_keywords');
+            searchField = document.getElementById('search_field');
+            keywords = globalWords.value;
+            searchBy = searchField.value;
+            if (searchBy != "") {
+                return " where " + searchBy + " like '" + keywords + "'";
+            }
+            return "";
+        }
+        
+        function server_name() {
+            if (document.getElementById("use_testserver").checked) {
+                return "http://10.0.1.149/";
+            }
+            return "http://wlan.anzhuoshangdian.com/";
+        }
+
+        function ValidateNumber(e, pnumber){ 
+            if (!/^\d+$/.test(pnumber) && pnumber != ""){ 
+                e.value = /^\d+/.exec(e.value);
+                if (e.value == "null") {
+                    e.value = "";
+                }
+            } 
+            return false; 
+        } 
+        function onsortfieldchange() {
+            globalNeedRecreateSelect = false;
+            requestNetworkDataLocked(globalBtnObj, globalTableName);
+        }
+        function loadmodeclick() {
+            var loadmode = document.getElementById("loadmode");
+            //alert(loadmode.checked);
+            
+            if(loadmode.checked) {
+                document.getElementById("stop_load").setAttribute("disabled", "true");
+            } else {
+                document.getElementById("stop_load").removeAttribute("disabled");
+            }
+        }
+        function stop_load() {
+            globalStopLoad = true;
+        }
+        function clickToExport(btn) {
+            exportToExcel(btn);
+        }
+        function exportToExcel(btn) {
+            var tableObj = document.getElementById("datatable");
+            if (tableObj == null || tableObj.rows == null || tableObj.rows.length <= 1) {
+                alert("表格数据为空！");
+                return ;
+            }
+            var tmpUrl = location.href.substring("file:///".length);
+            var index = tmpUrl.lastIndexOf("/");
+            var curDir = tmpUrl.substring(0, index + 1);
+            var saveFile = curDir + getExcelFileName();
+            saveFile = saveFile.replace(/\//g,"\\");
+            var saveFile = prompt("确认导出到文件", saveFile);
+            if (saveFile == null) {
+                return ;
+            }
+
+            btn.setAttribute("disabled", "true");
+            btn.setAttribute("value", "处理中...");
+            var oXL;
+            var oWB;
+            var pObj;
+            try{
+                oXL = new ActiveXObject("Excel.Application"); 
+                //创建AX对象excel  
+                oWB = oXL.Workbooks.Add();
+                //获取workbook对象  
+                var oSheet = oWB.ActiveSheet;
+                var lenRow = tableObj.rows.length; 
+                //取得表格行数
+                var row = 0;
+                realExport = function() {
+                    //alert(row);
+                    btn.setAttribute("value", "正在导出中第" + row + "行");
+                    pObj.update("正在导出中第" + row + "行");
+                    var lenCol = tableObj.rows(row).cells.length;
+                    for (var j = 1; j < lenCol; j++) {
+                        oSheet.Cells(row + 1, j).value = "'" + tableObj.rows(row).cells(j).innerText;
+                    }
+                    row++;
+                    if (row >= lenRow) {
+                        //设置excel可见属性 
+                        //oXL.Visible = true;
+                        setTimeout(exportComplete, 0);
+                    } else {
+                        setTimeout(realExport, 0);
+                    }
+                };
+                    setTimeout(realExport, 0);
+                    pObj = alertMsg("", null);
+                    exportComplete = function() {
+                        btn.removeAttribute("disabled");
+                        btn.setAttribute("value", "导出结果到Excel");
+                        pObj.close();
+                        try {
+                            //var fileName = getExcelFileName();
+                            //var fname = oXL.Application.GetSaveAsFilename(fileName, "Excel Spreadsheets (*.xls), *.xls");                
+                            //alert(saveFile);
+                            oWB.SaveAs(saveFile);
+                            oWB.Close();
+                            oXL.Quit();
+                        } catch(e) {
+
+                        }
+                    };
+              }catch(e){
+                    btn.removeAttribute("disabled");
+                    btn.setAttribute("value", "导出结果到Excel");
+                    if((!+'\v1')){ //ie浏览器
+                        alert("无法启动Excel，请确保电脑中已经安装了Excel!\n\n如果已经安装了Excel，"+"请调整IE的安全级别。\n\n具体操作：\n\n"+"工具 → Internet选项 → 安全 → 自定义级别 → ActiveX 控件和插件 → 对未标记为可安全执行脚本的ActiveX 控件初始化并执行脚本 → 启用 → 确定"); 
+                    }else{ 
+                       alert("请使用IE浏览器进行“导入到EXCEL”操作！");  //方便设置安全等级，限制为ie浏览器  
+                    }
+               }
+        }
+
+        function exec_sql() {
+            s = 0;
+            if (interval != 0) {
+                clearInterval(interval);
+            }
+            interval = setInterval("dataloading()", 1000);
+            globalUrl = server_name() + "activity/queryDataBase/";
+            jQuery.support.cors = true;
+            var obj = document.getElementById('sql_input');
+            var b = new Base64();
+            var enstr = b.encode(obj.value);
+            enstr = enstr.replace(/=/g, '%3D');
+            var reqdata = "data=" + enstr;
+            //alert(reqdata);
+            $.ajax(
+                {
+                    url : globalUrl,
+                    type : "get",
+                    dataType: 'JSON',
+                    data: reqdata,
+                    success : onDataResponse,
+                    error: function(obj, e, e2) {
+                        if (interval != 0) {
+                            clearInterval(interval);
+                        }
+                        //alert(obj.status + " : " + e + " : " + e2);
+                        //alert(e2);
+                        document.getElementById('show_result').innerText = e2;
+                    }
+                }
+            );
+        }
+        function test() {
+            confirm("");
+        }
+    </script>
+</head>
+<body>
+<div class="div-a">
+<div class="div-d">
+<div id="show_title" style="text-align:left;height:40px;line-height:40px;"></div>
+</div>
+<input type="checkbox" id="loadmode" onclick="loadmodeclick();" checked="true"/>使用阻塞
+<input type="button" id="stop_load" value="停止加载" onclick="stop_load();" disabled="true"/><br>
+<input type="checkbox" id="use_testserver" />使用测试地址<br><br>
+<label style="float:left;">字段名</label>
+<input type="text" style="float:left;width:75%;" id="search_field" readonly/>
+<br>
+<label style="float:left;">关键字</label>
+<input type="text" style="float:left;width:75%;" id="search_keywords"/><br>
+<input type="button" value="清除" onclick="clear_search();"/>
+
+<br>
+<div class="div-c">
+<input type="radio" name="sort_method" value="学生"/>升
+<input type="radio" name="sort_method" value="学生" checked="checked" />降
+<select id="sort_field" onchange="onsortfieldchange();" onmousewheel="return false;">
+    <option>选择排序方式</option>
+</select>
+<br>
+<label>Limit</label>
+<input type="text" id="limit" placeholder="limit" onkeyup="return ValidateNumber(this, value);" value="100"/>
+</div>
+<br>
+<div class="div-c">
+<!--label>开始</label>
+<input type="text" id="start_time"/><br>
+<label>结束</label>
+<input type="text" id="end_time"/><br>
+<input type="button" style="width:45%;background-color:#BFB" id="set_today_time" value="今天" onclick="settodaytime();"/>
+<input type="button" style="width:45%;background-color:#BFB" id="clear_time_box" value="清除" onclick="cleartimebox();"/></br-->
+<input type="checkbox" id="remove_dup" value="checkbox"/>去重android_uid<br><br>
+<input type="button" style="width:30%;background-color:#BFB" id="querywifi" value="WIFI" onclick="requestNetworkData(this, 'mk_collection_wifi');"/>
+<!--label>mk_collection_wifi</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="queryapp" value="DevApp" onclick="requestNetworkData(this, 'mk_collection_terminal');"/>
+<!--label>mk_collection_terminal</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="queryapp" value="LoginReg" onclick="requestNetworkData(this, 'mk_collection_loginreg');"/><br>
+<!--label>mk_collection_loginreg</label><br-->
+</div>
+<br>
+<div class="div-c">
+<input type="button" style="width:40%;background-color:#BFB" id="querymember" value="Member" onclick="requestNetworkData(this, 'mk_member');"/>
+<!--label>mk_member</label><br-->
+<input type="button" style="width:40%;background-color:#BFB" id="querymember" value="Integral" onclick="requestNetworkData(this, 'mk_integral');"/><br>
+<!--label>mk_integral</label><br-->
+</div>
+<br>
+<div class="div-c">
+<input type="button" style="width:40%;background-color:#BFB" id="querymember" value="Getrice" onclick="requestNetworkData(this, 'mk_security_getrice');"/>
+<!--label>mk_security_getrice</label><br-->
+<input type="button" style="width:40%;background-color:#BFB" id="querymember" value="Recharge" onclick="requestNetworkData(this, 'mk_security_recharge');"/><br>
+<!--label>mk_security_recharge</label><br-->
+</div>
+<br>
+<div class="div-c">
+<input type="button" style="width:30%;background-color:#BFB" id="querymember" value="Read" onclick="requestNetworkData(this, 'mk_activity_read');"/>
+<!--label>mk_activity_read</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="querymember" value="Download" onclick="requestNetworkData(this, 'mk_activity_down');"/>
+<!--label>mk_activity_down</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="querymember" value="Url" onclick="requestNetworkData(this, 'mk_activity_url');"/><br>
+<!--label>mk_activity_url</label><br-->
+</div>
+<br>
+<div class="div-c">
+<input type="button" style="width:30%;background-color:#BFB" id="querygroup" value="Group" onclick="requestNetworkData(this, 'mk_activity_groups');"/>
+<!--label>mk_activity_groups</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="queryuser" value="User" onclick="requestNetworkData(this, 'mk_activity_user');"/>
+<!--label>mk_activity_user</label><br-->
+<input type="button" style="width:30%;background-color:#BFB" id="queryinvite" value="Invite" onclick="requestNetworkData(this, 'mk_activity_invite');"/>
+<!--label>mk_activity_invite</label><br-->
+</div>
+<br>
+    <button style="width:100%;background-color:#BFB;color:red" onclick="clickToExport(this);">导出结果到Excel</button>
+<br>
+    <div class="div-c">
+    <label>时间格式转换</label><br>
+    <input type="text" id="longtime" value="" placeholder="请输入长整形时间"/><br>
+    <input type="text" id="stringtime" value="" readonly="readonly"/>
+    <input type="button" id="translate_time" value="转换" onclick="translateTime();"/>
+    </div>
+    <input type="button" id="test" value="Test" onclick="test();"/>
+</div>
+
+<div class="div-e">
+    <div style="float:left;width:90%;background-color:#888;">
+        <textarea id="sql_input" style="width:100%;height:66px;" placeholder="输入SQL"></textarea>
+        <input type="text" id="json_url_addr" style="float:left;width:100%;" placeholder="请输入json URL"/>
+    </div>
+    <div style="float:right;width='88px';background-color:#888">
+        <input type="button" id="exec_sql" style="width:88px" value="执行SQL" onclick="exec_sql();"/><br>
+        <input type="button" id="pre_page" style="width:88px" value="上一页" onclick="pre_page();"/><br>
+        <input type="button" id="next_page" style="width:88px" value="下一页" onclick="next_page();"/><br>
+        <input type="button" id="show_json" style="width:88px" value="显示json结果" onclick="showjsonresult();"/>
+    </div>
+</div>
+
+<div id="show_result" class="div-b"></div>
+</body>
+</html>

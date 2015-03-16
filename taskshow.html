@@ -1,0 +1,800 @@
+<html>
+<head>
+    <!-- <meta http-equiv="content-type" content="text/html; charset=UTF-8" /> -->
+    <meta http-equiv="content-type" content="text/html; charset=gb2312" />
+
+    <style type="text/css"> 
+        .div-a{ float:left;width:14%;height:100%;border:1px solid #F00; overflow:auto;}
+        .div-b{width:100%;height:75%;border:1px solid #000;overflow:auto;margin-left: auto;margin-right:auto} 
+        .div-c{border:1px solid #000;overflow:auto;}
+        .div-d{height:80px;border:1px solid #000;overflow:auto;}
+        .div-e{width:100%;border:0px solid #000;margin-left: auto;margin-right:auto}
+        .textinput{width:50%}
+        .sqlinput{width:85%;height:88px}
+        td {
+            width: 1px;   
+            white-space: nowrap; // 自适应宽度   
+            word-break:  keep-all; // 避免长单词截断，保持全部
+            align:center;
+        }
+        label {
+            white-space: nowrap; // 自适应宽度   
+            word-break:  keep-all; // 避免长单词截断，保持全部
+            text-align:center;
+        }
+        table{ 
+            border-color: #d2f1ac; 
+            border-collapse: collapse; 
+            border-top: 0px solid #ffffff; 
+        }
+        .fixedtd{ 
+            position: relative; 
+            z-index: 1; 
+            background: #009933; 
+            text-align: center; 
+        } 
+
+    </style> 
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.1.js"></script>
+    <script type="text/javascript" src="http://blog.faultylabs.com/files/md5.js"></script>
+    <script type="text/javascript" src="js/span.js"></script>
+    <script type="text/javascript" src="js/jsonformat.js"></script>
+    <script type="text/javascript" src="http://www.bejson.com/xml2json/xj/js/ObjTree.js"></script>
+    <script type="text/javascript" src="http://www.bejson.com/xml2json/xj/js/jkl-dumper.js"></script>
+    <script>
+        /**
+        *
+        *  Base64 encode / decode
+        *
+        *  @author haitao.tu
+        *  @date   2010-04-26
+        *  @email  tuhaitao@foxmail.com
+        *
+        */
+         
+        function Base64() {
+         
+            // private property
+            _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+         
+            // public method for encoding
+            this.encode = function (input) {
+                var output = "";
+                var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+                var i = 0;
+                input = _utf8_encode(input);
+                while (i < input.length) {
+                    chr1 = input.charCodeAt(i++);
+                    chr2 = input.charCodeAt(i++);
+                    chr3 = input.charCodeAt(i++);
+                    enc1 = chr1 >> 2;
+                    enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                    enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                    enc4 = chr3 & 63;
+                    if (isNaN(chr2)) {
+                        enc3 = enc4 = 64;
+                    } else if (isNaN(chr3)) {
+                        enc4 = 64;
+                    }
+                    output = output +
+                    _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
+                    _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
+                }
+                return output;
+            }
+         
+            // public method for decoding
+            this.decode = function (input) {
+                var output = "";
+                var chr1, chr2, chr3;
+                var enc1, enc2, enc3, enc4;
+                var i = 0;
+                input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+                while (i < input.length) {
+                    enc1 = _keyStr.indexOf(input.charAt(i++));
+                    enc2 = _keyStr.indexOf(input.charAt(i++));
+                    enc3 = _keyStr.indexOf(input.charAt(i++));
+                    enc4 = _keyStr.indexOf(input.charAt(i++));
+                    chr1 = (enc1 << 2) | (enc2 >> 4);
+                    chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                    chr3 = ((enc3 & 3) << 6) | enc4;
+                    output = output + String.fromCharCode(chr1);
+                    if (enc3 != 64) {
+                        output = output + String.fromCharCode(chr2);
+                    }
+                    if (enc4 != 64) {
+                        output = output + String.fromCharCode(chr3);
+                    }
+                }
+                output = _utf8_decode(output);
+                return output;
+            }
+         
+            // private method for UTF-8 encoding
+            _utf8_encode = function (string) {
+                string = string.replace(/\r\n/g,"\n");
+                var utftext = "";
+                for (var n = 0; n < string.length; n++) {
+                    var c = string.charCodeAt(n);
+                    if (c < 128) {
+                        utftext += String.fromCharCode(c);
+                    } else if((c > 127) && (c < 2048)) {
+                        utftext += String.fromCharCode((c >> 6) | 192);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    } else {
+                        utftext += String.fromCharCode((c >> 12) | 224);
+                        utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    }
+         
+                }
+                return utftext;
+            }
+         
+            // private method for UTF-8 decoding
+            _utf8_decode = function (utftext) {
+                var string = "";
+                var i = 0;
+                var c = c1 = c2 = 0;
+                while ( i < utftext.length ) {
+                    c = utftext.charCodeAt(i);
+                    if (c < 128) {
+                        string += String.fromCharCode(c);
+                        i++;
+                    } else if((c > 191) && (c < 224)) {
+                        c2 = utftext.charCodeAt(i+1);
+                        string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                        i += 2;
+                    } else {
+                        c2 = utftext.charCodeAt(i+1);
+                        c3 = utftext.charCodeAt(i+2);
+                        string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                        i += 3;
+                    }
+                }
+                return string;
+            }
+        }
+
+    </script>
+    <script>
+        function xmlToJson(xml) {
+         
+        // Create the return object
+            var obj = {};
+         
+            if (xml.nodeType == 1) { // element
+                // do attributes
+                if (xml.attributes.length > 0) {
+                obj["@attributes"] = {};
+                    for (var j = 0; j < xml.attributes.length; j++) {
+                        var attribute = xml.attributes.item(j);
+                        obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+                    }
+                }
+            } else if (xml.nodeType == 3) { // text
+                obj = xml.nodeValue;
+            }
+         
+            // do children
+            if (xml.hasChildNodes()) {
+                for(var i = 0; i < xml.childNodes.length; i++) {
+                    var item = xml.childNodes.item(i);
+                    var nodeName = item.nodeName;
+                    if (typeof(obj[nodeName]) == "undefined") {
+                        obj[nodeName] = xmlToJson(item);
+                    } else {
+                        if (typeof(obj[nodeName].length) == "undefined") {
+                            var old = obj[nodeName];
+                            obj[nodeName] = [];
+                            obj[nodeName].push(old);
+                        }
+                        obj[nodeName].push(xmlToJson(item));
+                    }
+                }
+            }
+            return obj;
+        }
+    </script>
+    <script>
+        function ExportToExcel(dataArray) { 
+            try{
+                var oXL = new ActiveXObject("Excel.Application"); 
+                //创建AX对象excel  
+                var oWB = oXL.Workbooks.Add();
+                //获取workbook对象  
+                var oSheet = oWB.ActiveSheet;
+                var lenRow = dataArray.length; 
+                //取得表格行数  
+                for (i = 0; i < lenRow; i++) 
+                { 
+                    var j = 0;
+                    for (var key in dataArray[i])
+                    { 
+                        oSheet.Cells(i + 1, j + 1).value = dataArray[i][key];  
+                        j++;
+                    } 
+                } 
+                oXL.Visible = true; 
+                //设置excel可见属性  
+              }catch(e){ 
+                    if((!+'\v1')){ //ie浏览器  
+                      alert("无法启动Excel，请确保电脑中已经安装了Excel!\n\n如果已经安装了Excel，"+"请调整IE的安全级别。\n\n具体操作：\n\n"+"工具 → Internet选项 → 安全 → 自定义级别 → ActiveX 控件和插件 → 对未标记为可安全执行脚本的ActiveX 控件初始化并执行脚本 → 启用 → 确定"); 
+                   }else{ 
+                       alert("请使用IE浏览器进行“导入到EXCEL”操作！");  //方便设置安全等级，限制为ie浏览器  
+                   } 
+               } 
+        }
+        var globalArray;
+        var globalUrl;
+        var globalType;
+        var globalInfo;
+        var globalAscSort;
+        var globalMethod;
+        var globalSearchField;
+        var globalStart;
+        var globalEnd;
+        var searchField;
+        var globalWords;
+
+        var ReqType = {"WIFIDATA":1, "APPDATA":2, "LOGDATA":3, "GROUPDATA":4, "USERDATA":5, "INVITEDATA":6, "MEMBERDATA":7, "INTEGRALDATA":8, "LOGINREGDATA":9};
+        function thradioclick(obj) {
+
+        }
+        function tdonclick(obj) {
+        }
+        function copytdtext(obj) {
+            var tdele = obj.parentElement;
+            alert(tdele.children[0].innerText);
+        }
+
+        function checkPhoneNumber(obj) {
+            //alert(obj.value);
+            var phoneNumber = "";
+            if (obj.value.indexOf("+86") != -1) {
+                phoneNumber = obj.value.substring("+86".length);
+            } else {
+                phoneNumber = obj.value;
+            }
+            //alert(obj.value + ":" + phoneNumber);
+            var url = "http://life.tenpay.com/cgi-bin/mobile/MobileQueryAttribution.cgi?chgmobile=" + phoneNumber;
+            //var url = "http://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel=" + phoneNumber;
+            $.ajax(
+                {
+                    url : url,
+                    async:true,
+                    type : "GET",
+                    dataType: 'text',
+                    success : function (data) {
+                        var xotree = new XML.ObjTree();
+                        var dumper = new JKL.Dumper();
+                        var tree = xotree.parseXML(data);
+                        jsonobj = dumper.dump(tree)
+                        //alert(jsonobj);
+                        jsonobj = eval('(' + jsonobj + ')');
+                        var provice = jsonobj.root.province;
+                        var city = jsonobj.root.city;
+                        var supplier = jsonobj.root.supplier;
+                        var display = provice + city + supplier;
+                        obj.innerHTML = "<font color=red>" + display + "</font>";
+                        /*
+                        var jsonResult = data.substring("__GetZoneResult_ = ".length);
+                        var jsonobj = eval('(' + jsonResult + ')');
+                        //alert(jsonobj.carrier);
+                        obj.innerHTML = "<font color=red>" + jsonobj.carrier + "</font>";
+                        */
+                    },
+                    error: function(obj, e, e2) {
+                        document.getElementById('show_result').innerText = e2;
+                    }
+                }
+            );
+        }
+        function getObj(row, col, key, jsonObj, realRow) {
+            var extra = "";
+            var tdElementLeft = "";
+            var arrayKey = key;
+            //alert(row + " - " + key + " - " + col);
+            if (row == 0) {
+                return "<th bgcolor=gray style='fixedtd;width:40px' onclick='thradioclick(this);'>" + key + "</th>";
+            }
+            if (col == 0) {
+                return "<td  style='width:10px;text-align:center' id=" + realRow + " onclick='onRowClick(this);'><font size=3 color='red'>" + realRow + "</font></td>";
+            }
+
+            if (arrayKey == "iconurl") {
+                arrayKey = "icon";
+            }
+            var eValue = eval("jsonObj."+ arrayKey);
+            if (typeof eValue == "string") {
+                if (eValue == null) {
+                    eValue = "";
+                }
+                eValue = eValue.replace(/</ig,"%lt;");
+                eValue = eValue.replace(/>/ig,"&gt;");
+            }
+
+            if (key == "desc") {
+                if (eValue.length > 50) {
+                    eValue = eValue.substring(0, 50);
+                }
+            }
+            var exchange = false;
+            var textalign = "left";
+            textalign = "left";
+            if (key == "url") {
+                tdElementLeft = "&nbsp;&nbsp;<a href=" + eValue + " onclick='tdonclick(this);'>Download</a>&nbsp;&nbsp;";
+            } else if (key == "icon") {
+                tdElementLeft = "&nbsp;&nbsp;<a href=" + eValue + " onclick='tdonclick(this);' target='_blank'>Show</a>&nbsp;&nbsp;";
+            } else if(key == "desc") {
+                //tdElementLeft = "<label style='display:inline-block;width:200px;overflow:hidden;text-overflow:ellipsis' onclick='tdonclick(this);'>" + eValue + "</label>";
+                tdElementLeft = "<input type='hidden' value=" + eValue + "></input>&nbsp;&nbsp;<a href='#top'>Description</a>&nbsp;&nbsp;";
+            } else {
+                tdElementLeft = "<label>" + eValue + "</label>";
+            }
+            var reg = new RegExp("^[0-9]*$");
+
+            if (key == "lasttime" || key == "regtime" || key == "addtime") {
+                if(reg.test(eValue)){
+                    extra = "&nbsp;&nbsp;<font color=red>[" + secondsTimetoString(parseInt(eValue + "000")) + "]</font> ";
+                    exchange = true;
+                }
+            }
+            if (key == "timestamp" || key == "time") {
+                if(reg.test(eValue)){
+                    extra = "&nbsp;&nbsp;<font color=red>[" + secondsTimetoString(parseInt(eValue)) + "]</font> ";
+                    exchange = true;
+                }
+            }
+
+            <!-- 复制 BEGIN-->
+            var copyText = eValue;
+            //extra += "&nbsp;&nbsp;<button onclick='copytdtext(this);'>复制</button>";
+            <!-- 复制 END-->
+
+            if (exchange == true) {
+                var tmp = tdElementLeft;
+                tdElementLeft = extra;
+                extra = tmp;
+            }
+            
+            return "<td style='text-align:" + textalign + "' id=" + realRow + " onclick='onRowClick(this);'>" + tdElementLeft + extra + "</td>";
+        }
+        var s = 0;
+        var interval = 0;
+        function dataloading() {
+            s++;
+            var tips = globalInfo + " <br>正在加载... " + s + "s";
+            document.getElementById('show_title').innerHTML = tips;
+        }
+        function requestUrl() {
+            s = 0;
+            jQuery.support.cors = true;
+
+            $.ajax(
+                {
+                    url : encodeURI(globalUrl),
+                    type : "GET",
+                    dataType: 'JSON',
+                    success : displayResultData,
+                    error: function(obj, e, e2) {
+                        if (interval != 0) {
+                            clearInterval(interval);
+                        }
+                        //alert(obj.status + " : " + e + " : " + e2);
+                        //alert(e2);
+                        document.getElementById('show_result').innerText = e2;
+                    }
+                }
+            );
+        }
+
+         /***
+         * 判断返回是否json格式
+         */
+        function isJson(obj){
+            return typeof(obj) == "object";
+        }
+
+        function displayResultData(data, status) {
+            //alert(data);
+            var docobj = document.getElementById('json_url_addr');
+            docobj.value = globalUrl;
+            if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
+            //alert(data.list);
+            var tmpObj = generateTableFormat(data.list);
+
+            var title = generateTitleInfo(data);
+            document.getElementById('show_result').innerHTML = tmpObj;
+            if (data.length == undefined) {
+                //showJsonObj(data);
+            }
+            var tr = document.getElementsByTagName('tr');
+            onRowClick(tr[1].children[0]);
+            document.getElementById("totalcount").innerText = "Total : " + data.count;
+        }
+
+        function generateTitleInfo(data) {
+            if (globalInfo == undefined) {
+                globalInfo = "SQL查询";
+            }
+            var str = "<h2>" + globalInfo + ":" + globalCount + "</h2>";
+            return str;
+        }
+
+        var globalRowId = 0;
+        function onRowClick(obj) {
+            var id = obj.id;
+            var strId = "" + id;
+            var blueStyle = "background-color:#AAF";
+            var whiteStyle = "background-color:#FFF";
+            if (id == globalRowId) {
+                //return ;
+            }
+            var oldTrObj = document.getElementById(globalRowId);
+            if (oldTrObj != null) {
+                oldTrObj.style.cssText=whiteStyle;
+            }
+
+            var innerObj = document.getElementById(id);
+            var trObj = innerObj.parentNode;
+            //alert(trObj.id);            
+            var value = strId.indexOf("selected-");
+            //alert(value);
+            if (value == -1) {
+                trObj.style.cssText = blueStyle;
+                trObj.id = "selected-" + id;
+            } else {
+                trObj.style.cssText = whiteStyle;
+                trObj.id = id.substring(9);
+            }
+            //alert(obj.id);
+            /*
+            if (id % 2 == 0) {
+                trObj.style.cssText = blueStyle;
+            } else {
+                trObj.style.cssText = whiteStyle;
+            }*/
+            /*
+            var tr = document.getElementsByTagName('tr');
+            for (var index = 0; index < tr.length; index++) {
+                //alert(tr[index].id);
+                if (tr[index].id == id) {
+                    tr[index].style.cssText = blueStyle;
+                } else {
+                    tr[index].style.cssText = whiteStyle;
+                }
+            }*/
+            globalRowId = trObj.id;
+            createTaskText(trObj);
+        }
+
+        function createTaskText(trObj) {
+
+            var name = trObj.children[1].children[0].innerText;
+            var version = trObj.children[3].children[0].innerText;
+            var versioncode = trObj.children[4].children[0].innerText;
+            var packagename = trObj.children[5].children[0].innerText;
+            var desc = trObj.children[6].children[0].value;
+            desc = desc.replace(/%lt;/ig,"<");
+            desc = desc.replace(/&gt;/ig,">");
+            var url = trObj.children[7].children[0].href;
+            url = decodeURI(url);
+            var icon = trObj.children[8].children[0].href;
+            icon = decodeURI(icon);
+
+            var debugText = "name : " + name + "\n";
+            debugText += "version : " + version + "\n";
+            debugText += "packagename : " + packagename + "\n";
+            debugText += "desc : " + desc + "\n";
+            debugText += "icon : " + icon + "\n";
+            debugText += "url : " + url + "\n";
+            //alert(debugText);
+            var apkIconObj = document.getElementById('apkicon');
+            var nameObj = document.getElementById('name');
+            var versionObj = document.getElementById('version');
+            var packagenameObj = document.getElementById('packagename');
+            var descObj = document.getElementById('desc');
+            var iconObj = document.getElementById('icon');
+            var urlObj = document.getElementById('url');
+            nameObj.innerText = name;
+            versionObj.innerText = version;
+            packagenameObj.innerText = packagename;
+            descObj.innerText = desc;
+            iconObj.innerText = icon;
+            var taskurl = url + "#pkg=" + packagename + "&dlappv=" + versioncode;
+            urlObj.innerText = taskurl;
+            apkIconObj.src=icon;
+        }
+        function labelclick(obj) {
+            var textobj = document.getElementById('select_text');
+            textobj.value = obj.innerText;
+            textobj.select();
+            /*
+            if (window.clipboardData) {
+                window.clipboardData.clearData();
+                window.clipboardData.setData("Text", obj.innerText);
+            }*/
+        }
+        function select_text_click(obj) {
+            select_text_click.select();
+            alert(obj);
+        }
+
+        function generateKeyArray(jsonObj) {
+            var haspackname = false;
+            for (var key in jsonObj) {
+                if (key == "packname") {
+                    haspackname = true;
+                    break;
+                }
+            }
+            if (haspackname) {
+                var keyArray = new Array('name', 'size', 'ver', 'version_code','packname', 'desc', 'url', "icon");
+            } else {
+                var keyArray = new Array('name', 'size', 'ver', 'version_code','packagename', 'desc', 'url', "icon");
+            }
+
+            /*
+            for (var key in jsonObj) {
+                keyArray.push(key);
+            }*/
+            //keyArray.sort();
+            keyArray.unshift("序号");
+            return keyArray;
+        }
+        function generateTableFormat(data) {
+
+            var count = data.length;
+            var fields = generateKeyArray(data[0]);
+
+            var strTable = "<table border=1 align=left>";
+            var realRow = 0;
+
+            for (var row = 0; row < count + 1; row++) {
+                strTable += "<tr>"
+                for (var col=0; col < fields.length; col++) {
+                    strTable += getObj(row, col, fields[col], data[row-1], realRow);
+                }
+                realRow++;
+                strTable += "</tr>"
+            }
+            globalCount = realRow - 1;
+            strTable += "</table>"
+
+            return strTable;
+        }
+
+        /*
+        *json 生成表格形式,暂时没有使用
+        */
+        function jsonToTable(data) {
+            if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
+            var count = data.length;
+            var strTable = "<table border=1>";
+            var jsonObj;
+            var tempStr='';
+            var row;
+            var tmp;
+            for (row = 0; row < count; row++) {
+
+                jsonObj = data[row];
+                if (row == 0) {
+                    /**
+                    *生成表头信息
+                    */
+                    strTable += "<tr>"
+                    tmp = 0;
+                    for (var key in jsonObj) {
+                        if (tmp == 0) {
+                            strTable += "<td>序号</td>";
+                        }
+                        strTable += "<td>" + key + "</td>";
+                        tmp = 1;
+                    }
+                    strTable += "</tr>"
+                }
+                strTable += "<tr>"
+                tmp = 0;
+                for (var key in jsonObj) {
+                    if (tmp == 0) {
+                        strTable += "<td><font size=3 color='red'>" + (row + 1) + "</font></td>";
+                    }
+                    strTable += "<td>" + jsonObj[key] + "</td>";
+                    tmp = 1;
+                }
+                strTable += "</tr>"
+            }
+            strTable += "</table>"
+            //alert(strTable);
+            return strTable;
+        }
+
+        function generateParamsUrl(url) {
+            var obj = document.getElementById('start_time');
+            globalStart = obj.value;
+            obj = document.getElementById('end_time');
+            globalEnd = obj.value;
+            if (globalStart != "" || globalStart != "") {
+                url += "?";
+            } else {
+                return url;
+            }
+
+            if (globalStart) {
+                url += "start=" + globalStart;
+                url += "&";
+            }
+            if (globalEnd) {
+                url += "end=" + globalEnd;
+            }
+            
+            return url;
+        }
+        /*请求网络数据函数*/
+        function showjsonresult() {
+            var obj1 = document.getElementById('json_url_addr');
+            globalUrl = obj1.value;
+            requestUrl();
+        }
+        /*请求网络数据函数结束*/
+        function stralign(str) {
+            if (str.length < 2) {
+                return "0" + str;
+            }
+            return str;
+        }
+        function secondsTimetoString(timelong) {
+            var date = new Date();
+            date.setTime(timelong);
+            var str = '';
+            str += date.getFullYear();
+            str += "-";
+            str += stralign(""+(date.getMonth() + 1))
+            str += "-";
+            str += stralign(""+date.getDate());
+            str += " ";
+            str += stralign(""+date.getHours());
+            str += ":";
+            str += stralign(""+date.getMinutes());
+            str += ":";
+            str += stralign(""+date.getSeconds());
+            return str;
+        }
+        function translateTime() {
+            var obj1 = document.getElementById('longtime');
+            var obj2 = document.getElementById('stringtime');
+            var reg = new RegExp("^[0-9]*$");
+            if(!reg.test(obj1.value) || obj1.value == ""){
+                alert("请输入数字!");
+                return ;
+            }
+            obj2.value = secondsTimetoString(obj1.value);
+        }
+        function getDateString(longtime) {
+            var date = new Date();
+            date.setTime(longtime);
+            var str = '';
+            str += date.getFullYear();
+            str += "-";
+            str += stralign(""+(date.getMonth() + 1))
+            str += "-";
+            str += stralign(""+date.getDate());
+            return str;
+        }
+        function settodaytime() {
+            var obj = document.getElementById('start_time');
+            var today = new Date();
+            var oneday = 24 * 3600 * 1000;
+            var nextDay = today.getTime() + oneday;
+            obj.value = getDateString(today.getTime());
+            obj = document.getElementById('end_time');
+            obj.value = getDateString(nextDay);
+        }
+
+        function cleartimebox() {
+            var obj = document.getElementById('start_time');
+            obj.value = "";
+            obj = document.getElementById('end_time');
+            obj.value = "";
+        }
+        function clear_search() {
+            var obj = document.getElementById('search_field');
+            obj.value = "";
+            obj = document.getElementById('search_keywords');
+            obj.value = "";
+        }
+        function showJsonObj(data) {
+            var str = "";
+            document.getElementById('show_result').innerText = JSON.stringify(data);
+            if (typeof(JsonUti) != undefined) {
+                document.getElementById('show_result').innerText = JsonUti.convertToString(data);
+            } else {
+                ocument.getElementById('show_result').innerText = JSON.stringify(data);
+            }
+        }
+    var marketurl = {"homelist_type2":"http://wlan.anzhuoshangdian.com/v1/gethomelist/type=2?page=1&pagesize=20",
+                     "gameranklist":"http://wlan.anzhuoshangdian.com/v1/getGameRankList/?page=1&pagesize=20",
+                     "applyranklist":"http://wlan.anzhuoshangdian.com/v1/getApplyRankList/?page=1&pagesize=20",
+                     "fasterrisinglist":"http://wlan.anzhuoshangdian.com/v1/getFasterRisingList/?page=1&pagesize=20",
+                     "gamehotlist":"http://wlan.anzhuoshangdian.com/v1/getgamehotlist/?page=1&pagesize=20",
+                     "applyhotlist":"http://wlan.anzhuoshangdian.com/v1/getapplyhotlist/?page=1&pagesize=20"};
+    function selectonchange(value) {
+        //alert(value);
+        var Obj = document.getElementById('json_url_addr');
+        Obj.value=eval("marketurl." + value);
+        showjsonresult();
+    }
+    function onkeyupfunc1() {
+        if (event.keyCode == 13) {
+            showjsonresult();
+        }
+    }
+    function onkeyupfunc2() {
+        if (event.keyCode == 13) {
+            requestMarketData();
+        }
+    }
+    function searchapkfun() {
+        var url = "http://wlan.anzhuoshangdian.com/v1/getListByKeySearch/";
+        url += "?key=" + $("#keywords").val();
+        url += "&page=1";
+        url += "&pagesize=20";
+        globalUrl = url;
+        //alert(globalUrl);
+        requestUrl();
+    }
+    function requestMarketData() {
+        var keywords = $("#keywords").val();
+        if (keywords == undefined || keywords == "") {
+            var Obj = document.getElementById('json_url_addr');
+            var selectObj = document.getElementById("market_url");
+            var value = selectObj.options[selectObj.selectedIndex].value;
+            Obj.value=eval("marketurl." + value);
+            showjsonresult();
+        } else {
+            searchapkfun();
+        }
+    }
+    function clearSearchWords() {
+        var Obj = document.getElementById('keywords');
+        Obj.value = "";
+        requestMarketData();
+    }
+    </script>
+</head>
+<body onload="showjsonresult();">
+<div>
+<input type="text" id="select_text" style="width:100%" readonly="readonly"/>
+<div style="line-height:36px;height:36px">
+<label style="text-align:center;heigth:36px">Icon&nbsp;&nbsp;&nbsp;:&nbsp;</label><img style="background-color:#ccc" width=36px height=36px id="apkicon"/>
+</div>
+<label>Name&nbsp;&nbsp;&nbsp;:&nbsp;</label><label style="background-color:#ccc" id="name" onclick="labelclick(this)"></label><br>
+<label>Version:&nbsp;</label><label style="background-color:#ccc" id="version" onclick="labelclick(this)"></label><br>
+<label>Package:&nbsp;</label><label style="background-color:#ccc" id="packagename" onclick="labelclick(this)"></label><br>
+<label>Desc&nbsp;&nbsp;&nbsp;:&nbsp;</label><label style="background-color:#ccc" id="desc" onclick="labelclick(this)"></label><br>
+<label>Iconurl:&nbsp;</label><label style="background-color:#ccc" id="icon" onclick="labelclick(this)"></label><br>
+<label>Url&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;</label><label style="background-color:#ccc" id="url" onclick="labelclick(this)"></label><br>
+
+</div>
+<div class="div-e">
+    <div style="float:left;background-color:#FFF;">
+        <input type="text" id="json_url_addr" style="float:left;width:700px" placeholder="请输入json URL" onkeyup="onkeyupfunc1();" value="http://wlan.anzhuoshangdian.com/v1/gethomelist/type=2?page=1&pagesize=20"></input>
+        <select id="market_url" onchange="selectonchange(this.value)" >
+            <option value="homelist_type2">homelist_type2</option>
+            <option value="gameranklist">gameranklist</option>
+            <option value="applyranklist">applyranklist</option>
+            <option value="fasterrisinglist">fasterrisinglist</option>
+            <option value="gamehotlist">gamehotlist</option>
+            <option value="applyhotlist">applyhotlist</option>
+        </select>
+        <label>关键字：</label>
+        <input type="text" id="keywords" value="" placeholder="关键字" style="width:200px" onkeyup="onkeyupfunc2();"/>
+        <input type="button" value="清空" onclick="clearSearchWords();"/>
+        <font size=3 color='red'><label id="totalcount"></label></font>
+    </div>
+</div>
+
+<div id="show_result" class="div-b"/>
+</body>
+</html>
