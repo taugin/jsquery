@@ -907,7 +907,7 @@
             globalBtnObj = obj;
             globalInfo = obj.value;
             globalTableName = tablename;
-            globalUrl = 'http://wlan.anzhuoshangdian.com/activity/queryInviteData/';
+            globalUrl = server_name() + 'activity/queryInviteData/';
             var sql = "select * from " + globalTableName + whereString() + sortString() + limitString();
             setSql(sql);
             exec_sql();
