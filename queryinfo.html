@@ -652,11 +652,7 @@
             interval = 0;
             var docobj = document.getElementById('json_url_addr');
             docobj.value = globalUrl;
-            var checkBox = document.getElementById('remove_dup');
             var tmpObj = data;
-            if ((globalTableName == "mk_collection_wifi" || globalTableName == "mk_collection_terminal") && checkBox.checked) {
-                tmpObj = removeDup(data);
-            }
 
             if (tmpObj.length > 0 && globalNeedRecreateSelect) {
                 createSelectValues(tmpObj);
@@ -908,7 +904,14 @@
             globalInfo = obj.value;
             globalTableName = tablename;
             globalUrl = server_name() + 'activity/queryInviteData/';
-            var sql = "select * from " + globalTableName + whereString() + sortString() + limitString();
+            var sql = "";
+            var distinct = isDistinct();
+            if (distinct) {
+                var distinctField = $("#search_field").val();
+                sql = "select *, count(" + distinctField + ") as aaacount from " + globalTableName + " group by " + distinctField + sortString() + limitString();
+            } else {
+                sql = "select * from " + globalTableName + whereString() + sortString() + limitString();
+            }
             setSql(sql);
             exec_sql();
         }
@@ -1042,6 +1045,12 @@
             }
             return "http://wlan.anzhuoshangdian.com/";
         }
+        
+        function isDistinct() {
+            var checkBox = document.getElementById('remove_dup');
+            var searchField = $("#search_field").val();
+            return checkBox.checked && searchField != null && searchField != "";
+        }
 
         function ValidateNumber(e, pnumber){ 
             if (!/^\d+$/.test(pnumber) && pnumber != ""){ 
@@ -1156,6 +1165,7 @@
             globalUrl = server_name() + "activity/queryDataBase/";
             jQuery.support.cors = true;
             var obj = document.getElementById('sql_input');
+
             var b = new Base64();
             var enstr = b.encode(obj.value);
             enstr = enstr.replace(/=/g, '%3D');
@@ -1191,7 +1201,8 @@
 </div>
 <input type="checkbox" id="loadmode" onclick="loadmodeclick();" checked="true"/>使用阻塞
 <input type="button" id="stop_load" value="停止加载" onclick="stop_load();" disabled="true"/><br>
-<input type="checkbox" id="use_testserver" />使用测试地址<br><br>
+<input type="checkbox" id="use_testserver" />使用测试地址<br>
+<input type="checkbox" id="remove_dup" value="checkbox"/>按字段名去重<br><br>
 <label style="float:left;">字段名</label>
 <input type="text" style="float:left;width:75%;" id="search_field" readonly/>
 <br>
@@ -1218,7 +1229,6 @@
 <input type="text" id="end_time"/><br>
 <input type="button" style="width:45%;background-color:#BFB" id="set_today_time" value="今天" onclick="settodaytime();"/>
 <input type="button" style="width:45%;background-color:#BFB" id="clear_time_box" value="清除" onclick="cleartimebox();"/></br-->
-<input type="checkbox" id="remove_dup" value="checkbox"/>去重android_uid<br><br>
 <input type="button" style="width:30%;background-color:#BFB" id="querywifi" value="WIFI" onclick="requestNetworkData(this, 'mk_collection_wifi');"/>
 <!--label>mk_collection_wifi</label><br-->
 <input type="button" style="width:30%;background-color:#BFB" id="queryapp" value="DevApp" onclick="requestNetworkData(this, 'mk_collection_terminal');"/>
