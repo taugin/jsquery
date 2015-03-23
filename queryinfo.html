@@ -584,10 +584,16 @@
                 }
             }
             <!-- 添加号码归属地查询 END-->
-            if (exchange == true) {
-                var tmp = label;
-                label = extra;
-                extra = tmp;
+
+            var use_extradata = document.getElementById("use_extradata");
+            if (!use_extradata.checked) {
+                extra = "";
+            } else {
+                if (exchange == true) {
+                    var tmp = label;
+                    label = extra;
+                    extra = tmp;
+                }
             }
             return "<td><div style='white-space:nowrap;'>" + label + extra + "</div></td>";
         }
@@ -1286,6 +1292,7 @@
 <input type="button" id="stop_load" value="停止加载" onclick="stop_load();" disabled="true"/><br>
 <input type="checkbox" id="use_testserver" onclick="usetestserver();"/>使用测试地址<br>
 <input type="text" style="float:left;width:100%;" id="test_url" value="http://10.0.1.149/" disabled></input><br><br>
+<input type="checkbox" id="use_extradata" checked/>显示额外数据<br>
 <input type="checkbox" id="remove_dup" value="checkbox"/>按字段名去重<br>
 <label style="float:left;">字段名</label>
 <input type="text" style="float:left;width:75%;" id="search_field" readonly/>
