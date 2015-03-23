@@ -41,7 +41,6 @@
             background: url(images/gray_btn.png) no-repeat right top;
             font-style: normal;
         }
-
     </style>
     <style type="text/css"> 
         .div-a{ float:left;width:14%;height:100%;border:1px solid #F00; overflow:auto;}
@@ -175,13 +174,15 @@
             };
             //alertBox.appendChild(btn1);
             if (mode === 1) {
-                var btn2 = document.createElement('a');
+                var btn2 = document.createElement('button');
                 btn2.id = 'alertMsg_btn2';
-                btn2.href = 'javas' + 'cript:void(0)';
-                btn2.innerHTML = '<cite>取消</cite>';
+                //btn2.href = 'javas' + 'cript:void(0)';
+                //btn2.innerHTML = '<cite>取消</cite>';
+                btn2.innerHTML = '取消';
                 btn2.onclick = function () {
                     document.body.removeChild(alertBox);
                     document.body.removeChild(shadowDiv);
+                    golbalStopProcessing = true;
                     return false;
                 };
                 alertBox.appendChild(btn2);
@@ -198,6 +199,7 @@
                 update : UpdateStatusText,
                 close : CloseAlert
             };
+            golbalStopProcessing = false;
             return op;
         }
     </script>
@@ -439,6 +441,8 @@
         var globalExportXls = false;
         var globalNeedRecreateSelect = false;
         var globalStopLoad = false;
+        var ajaxRequest;
+        var golbalStopProcessing = false;
 
         function thradioclick(obj) {
             searchField = document.getElementById('search_field');
@@ -598,10 +602,13 @@
                 clearInterval(interval);
             }
             interval = setInterval("dataloading()", 1000);
-
+            var docobj = document.getElementById('json_url_addr');
+            docobj.value = globalUrl;
             jQuery.support.cors = true;
-
-            $.ajax(
+            if (ajaxRequest != null) {
+                ajaxRequest.abort();
+            }
+            ajaxRequest = $.ajax(
                 {
                     url : globalUrl,
                     type : "GET",
@@ -650,8 +657,6 @@
             //alert(data);
             clearInterval(interval);
             interval = 0;
-            var docobj = document.getElementById('json_url_addr');
-            docobj.value = globalUrl;
             var tmpObj = data;
 
             if (tmpObj.length > 0 && globalNeedRecreateSelect) {
@@ -659,7 +664,7 @@
                 globalNeedRecreateSelect = true;
             }
             if (document.getElementById("loadmode").checked) {
-                showTableFromJsonFormat(tmpObj);
+                showTableFromJsonFormat1(tmpObj);
             } else {
                 showTableFromJsonFormat2(tmpObj);
             }
@@ -689,7 +694,7 @@
             var realRow = 0;
 
             for (var row = 0; row < count + 1; row++) {
-                strTable += "<tr>"
+                strTable += "<tr>";
                 for (var col=0; col < fields.length; col++) {
                     strTable += getObj(row, col, fields[col], data[row-1], realRow);
                 }
@@ -699,6 +704,45 @@
             globalCount = realRow - 1;
             strTable += "</table>"
             document.getElementById('show_result').innerHTML = strTable;
+        }
+        function showTableFromJsonFormat1(data) {
+            document.getElementById('show_result').innerHTML = "";
+            var count = data.length;
+            var fields = generateKeyArray(data[0]);
+            var strTable = "<table id='datatable' align=left class='table' border='1'>";
+            var row = 0;
+            showEveryRow = function() {
+                strTable += "<tr>";
+                for (var col=0; col < fields.length; col++) {
+                    strTable += getObj(row, col, fields[col], data[row-1], row);
+                }
+                strTable += "</tr>"
+                if (row > 0) {
+                    var statusText = "正在生成第" + row + "行";
+                    document.getElementById('show_title').innerHTML = statusText;
+                    pObj.update("正在生成第" + row + "行");
+                }
+                globalCount = row;
+                //alert(strTable);
+                row++;
+                if (row >= count + 1) {
+                    showStatusInfo();
+                    strTable += "</table>"
+                    document.getElementById('show_result').innerHTML = strTable;
+                    pObj.close();
+                } else {
+                    if (golbalStopProcessing) {
+                        showStatusInfo();
+                        strTable += "</table>"
+                        document.getElementById('show_result').innerHTML = strTable;
+                    } else {
+                        setTimeout(showEveryRow, 0);
+                    }
+                }
+            };
+            pObj = alertMsg("", 1);
+            setTimeout(showEveryRow, 0);
+//            globalCount = count;
         }
         function getType(o) { 
             var _t; return ((_t = typeof(o)) == "object" ? o==null && "null" || Object.prototype.toString.call(o).slice(8,-1):_t);//.toLowerCase(); 
@@ -901,7 +945,6 @@
             globalBtnObj = obj;
             globalInfo = obj.value;
             globalTableName = tablename;
-            globalUrl = server_name() + 'activity/queryInviteData/';
             var sql = "";
             var distinct = isDistinct();
             if (distinct) {
@@ -1039,7 +1082,7 @@
         
         function server_name() {
             if (document.getElementById("use_testserver").checked) {
-                return "http://10.0.1.149/";
+                return $("#test_url").val();
             }
             return "http://wlan.anzhuoshangdian.com/";
         }
@@ -1071,6 +1114,14 @@
                 document.getElementById("stop_load").setAttribute("disabled", "true");
             } else {
                 document.getElementById("stop_load").removeAttribute("disabled");
+            }
+        }
+        function usetestserver() {
+            var usetest = document.getElementById("use_testserver");
+            if (usetest.checked) {
+                document.getElementById("test_url").removeAttribute("disabled");
+            }else{
+                document.getElementById("test_url").setAttribute("disabled", "true");
             }
         }
         function stop_load() {
@@ -1121,17 +1172,21 @@
                     if (row >= lenRow) {
                         //设置excel可见属性 
                         //oXL.Visible = true;
+                        pObj.close();
                         setTimeout(exportComplete, 0);
                     } else {
-                        setTimeout(realExport, 0);
+                        if (golbalStopProcessing) {
+                            setTimeout(exportComplete, 0);
+                        } else {
+                            setTimeout(realExport, 0);
+                        }
                     }
                 };
                     setTimeout(realExport, 0);
-                    pObj = alertMsg("", null);
+                    pObj = alertMsg("", 1);
                     exportComplete = function() {
                         btn.removeAttribute("disabled");
                         btn.setAttribute("value", "导出结果到Excel");
-                        pObj.close();
                         try {
                             //var fileName = getExcelFileName();
                             //var fname = oXL.Application.GetSaveAsFilename(fileName, "Excel Spreadsheets (*.xls), *.xls");                
@@ -1161,6 +1216,8 @@
             }
             interval = setInterval("dataloading()", 1000);
             globalUrl = server_name() + "activity/queryDataBase/";
+            var docobj = document.getElementById('json_url_addr');
+            docobj.value = globalUrl;
             jQuery.support.cors = true;
             var obj = document.getElementById('sql_input');
 
@@ -1169,7 +1226,10 @@
             enstr = enstr.replace(/=/g, '%3D');
             var reqdata = "data=" + enstr;
             //alert(reqdata);
-            $.ajax(
+            if (ajaxRequest != null) {
+                ajaxRequest.abort();
+            }
+            ajaxRequest = $.ajax(
                 {
                     url : globalUrl,
                     type : "get",
@@ -1199,8 +1259,9 @@
 </div>
 <input type="checkbox" id="loadmode" onclick="loadmodeclick();" checked="true"/>使用阻塞
 <input type="button" id="stop_load" value="停止加载" onclick="stop_load();" disabled="true"/><br>
-<input type="checkbox" id="use_testserver" />使用测试地址<br>
-<input type="checkbox" id="remove_dup" value="checkbox"/>按字段名去重<br><br>
+<input type="checkbox" id="use_testserver" onclick="usetestserver();"/>使用测试地址<br>
+<input type="text" style="float:left;width:100%;" id="test_url" value="http://10.0.1.149/" disabled></input><br><br>
+<input type="checkbox" id="remove_dup" value="checkbox"/>按字段名去重<br>
 <label style="float:left;">字段名</label>
 <input type="text" style="float:left;width:75%;" id="search_field" readonly/>
 <br>
