@@ -160,6 +160,7 @@
             //创建弹出框里面的内容P标签
             var alertMsg_info = document.createElement('P');
             alertMsg_info.id = 'alertMsg_info';
+            alertMsg_info.style.cssText = "text-align:center;";
             alertMsg_info.innerHTML = msg;
             alertBox.appendChild(alertMsg_info);
             //创建按钮
@@ -613,7 +614,13 @@
                     url : globalUrl,
                     type : "GET",
                     dataType: 'JSON',
-                    success : onDataResponse,
+                    success : function (data, status) {
+                        if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
+                        if (data.length == undefined && data.error == 0) {
+                            data = data.list;
+                        }
+                        onDataResponse(data, status);
+                    },
                     error: function(obj, e, e2) {
                         if (interval != 0) {
                             clearInterval(interval);
@@ -708,6 +715,9 @@
         function showTableFromJsonFormat1(data) {
             document.getElementById('show_result').innerHTML = "";
             var count = data.length;
+            if (count == undefined) {
+                count = 0;
+            }
             var fields = generateKeyArray(data[0]);
             var strTable = "<table id='datatable' align=left class='table' border='1'>";
             var row = 0;
@@ -718,9 +728,9 @@
                 }
                 strTable += "</tr>"
                 if (row > 0) {
-                    var statusText = "正在生成第" + row + "行";
+                    var statusText = "正在生成第" + row + "/" + count + "行";
                     document.getElementById('show_title').innerHTML = statusText;
-                    pObj.update("正在生成第" + row + "行");
+                    pObj.update(statusText);
                 }
                 globalCount = row;
                 //alert(strTable);
@@ -1106,6 +1116,13 @@
             globalNeedRecreateSelect = false;
             requestNetworkDataLocked(globalBtnObj, globalTableName);
         }
+        
+        function onsortfieldkeyup() {
+            if (event.keyCode == 13) {
+                onsortfieldchange();
+            }
+        }
+
         function loadmodeclick() {
             var loadmode = document.getElementById("loadmode");
             //alert(loadmode.checked);
@@ -1162,8 +1179,8 @@
                 var row = 0;
                 realExport = function() {
                     //alert(row);
-                    btn.setAttribute("value", "正在导出中第" + row + "行");
-                    pObj.update("正在导出中第" + row + "行");
+                    btn.setAttribute("value", "正在导出中第" + row + "/" + lenRow + "行");
+                    pObj.update("正在导出中第" + row + "/" + lenRow + "行");
                     var lenCol = tableObj.rows(row).cells.length;
                     for (var j = 1; j < lenCol; j++) {
                         oSheet.Cells(row + 1, j).value = "'" + tableObj.rows(row).cells(j).innerText;
@@ -1273,7 +1290,7 @@
 <div class="div-c">
 <input type="radio" name="sort_method" value="学生"/>升
 <input type="radio" name="sort_method" value="学生" checked="checked" />降
-<select id="sort_field" onchange="onsortfieldchange();" onmousewheel="return false;">
+<select id="sort_field" onchange="onsortfieldchange();" onmousewheel="return false;" onkeyup="onsortfieldkeyup();">
     <option>选择排序方式</option>
 </select>
 <br>
