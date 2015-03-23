@@ -26,7 +26,7 @@
 
         #alertMsg_btn1, #alertMsg_btn2 {
             display: inline-block;
-            background: url(images/gray_btn.png) no-repeat left top;
+            background: no-repeat left top;
             padding-left: 3px;
             color: #000000;
             font-size: 12px;
@@ -445,6 +445,7 @@
         var globalStopLoad = false;
         var ajaxRequest;
         var golbalStopProcessing = false;
+        var globalCount = 0;
 
         function thradioclick(obj) {
             searchField = document.getElementById('search_field');
@@ -1123,6 +1124,12 @@
                 onsortfieldchange();
             }
         }
+        
+        function onurlkeyup() {
+            if (event.keyCode == 13) {
+                showjsonresult();
+            }
+        }
 
         function loadmodeclick() {
             var loadmode = document.getElementById("loadmode");
@@ -1360,7 +1367,7 @@
 <div class="div-e">
     <div style="float:left;width:90%;background-color:#888;">
         <textarea id="sql_input" style="width:100%;height:66px;" placeholder="ÊäÈëSQL"></textarea>
-        <input type="text" id="json_url_addr" style="float:left;width:100%;" placeholder="ÇëÊäÈëjson URL"/>
+        <input type="text" id="json_url_addr" style="float:left;width:100%;" onkeyup="onurlkeyup();" placeholder="ÇëÊäÈëjson URL"/>
     </div>
     <div style="float:right;width='88px';background-color:#888">
         <input type="button" id="exec_sql" style="width:88px" value="Ö´ÐÐSQL" onclick="exec_sql();"/><br>
