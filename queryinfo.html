@@ -4,7 +4,7 @@
     <meta http-equiv="content-type" content="text/html; charset=gb2312" />
     <title>海豚线上数据查询</title>
     <style type="text/css">
-        #alertMsg {
+        .alertMsg {
             display: none;
             width: 400px;
             border: 1px solid #ddd;
@@ -156,7 +156,7 @@
             //弹出框
             var styleStr1 = 'display:block;position:fixed;_position:absolute;left:' + (winSize.windowWidth / 2 - 200) + 'px;top:' + (winSize.windowHeight / 2 - 150) + 'px;_top:' + (winSize.windowHeight / 2 + top - 150)+ 'px;'; //弹出框的位置
             var alertBox = document.createElement('div');
-            alertBox.id = 'alertMsg';
+            alertBox.className = 'alertMsg';
             alertBox.style.cssText = styleStr1;
             //创建弹出框里面的内容P标签
             var alertMsg_info = document.createElement('P');
@@ -456,12 +456,17 @@
             globalWords.value = obj.innerText;
         }
 
-        function recharge(id) {
-            //alert(id);
+        function recharge(btnObj, id, phonenumber, amount) {
+            var divObj = btnObj.parentNode;
+            //alert("id : " + id + " , phonenumber : " + phonenumber + " , amount : " + amount);
             var sign = faultylabs.MD5("id="+id+"www.anzhuoshangdian.com");
             sign = sign.toLowerCase();
             var rechargeUrl = server_name() + "user/manualrecharge/?id="+id+"&sign="+sign;
             //alert(rechargeUrl);
+            if (confirm("确定要为该号码" + phonenumber + "充值" + amount + "元吗？") == false) {
+                return ;
+            }
+
             $.ajax({
             url:rechargeUrl,
             type:"GET",
@@ -471,16 +476,21 @@
                {
                     var obj = eval("(" + json + ")");
                     alert("error : " + obj.error + "\nmsg : " + obj.msg);
+                    if(obj.error == 0) {
+                        divObj.innerHTML = "1&nbsp;&nbsp;<label>充值成功</label>";
+                    }
                }
             }
             });
         }
-        function refuse(id) {
+        function refuse(btnObj, id) {
             //alert(id);
+            var divObj = btnObj.parentNode;
             var sign = faultylabs.MD5("id="+id+"www.anzhuoshangdian.com");
             sign = sign.toLowerCase();
             var refuseUrl = server_name() + "user/refuserecharge/?id="+id+"&sign="+sign
             //alert(refuseUrl);
+
             $.ajax({
             url:refuseUrl,
             type:"GET",
@@ -490,6 +500,9 @@
                {
                     var obj = eval("(" + json + ")");
                     alert("code : " + obj.code + "\nmsg : " + obj.msg);
+                    if(obj.code == 0) {
+                        divObj.innerHTML = "2&nbsp;&nbsp;<label>已拒绝</label>";
+                    }
                }
             }
             });
@@ -563,8 +576,10 @@
             if (globalTableName == "mk_security_recharge" && key == "status") {
                 if (jsonObj[key] == "0") {
                     var id = jsonObj.id;
-                    extra += "&nbsp;&nbsp;<button onclick='recharge("+id+");'>充值</button>";
-                    extra += "&nbsp;<button onclick='refuse("+id+");'>拒绝</button>";
+                    var phonenumber = jsonObj.phone;
+                    var amount = jsonObj.fvalue
+                    extra += "&nbsp;&nbsp;<button onclick='recharge(this, " + id + ", " + phonenumber + ", " + amount + ");'>充值</button>";
+                    extra += "&nbsp;<button onclick='refuse(this, "+id+");'>拒绝</button>";
                 } else if (jsonObj[key] == "1") {
                     extra += "&nbsp;&nbsp;<label>充值成功</label>";
                 } else if (jsonObj[key] == "2") {
