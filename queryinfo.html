@@ -542,10 +542,19 @@
             var extra = "";
             //alert(row + " - " + key + " - " + col);
             if (row == 0) {
-                return "<th bgcolor=gray style='fixedtd;white-space:nowrap' onclick='thradioclick(this);'>" + key + "</th>";
+                if (key != "checkbox") {
+                    return "<th bgcolor=gray style='fixedtd;white-space:nowrap' onclick='thradioclick(this);'>" + key + "</th>";
+                } else {
+                    return "<td bgcolor=gray><input type='checkbox' onclick='onSelectAllOrCancel(this);'/></td>"
+                }
             }
+
             if (col == 0) {
-                return "<td id=" + realRow + " onclick='onRowClick(this);'><font size=3 color='red'>" + realRow + "</font></td>";
+                return "<td><input type='checkbox' onclick='onCheckBoxClick(this);'/></td>"
+            }
+            if (col == 1) {
+                //return "<td id=" + realRow + " onclick='onRowClick(this);'><font size=3 color='red'>" + realRow + "</font></td>";
+                return "<td><font size=3 color='red'>" + realRow + "</font></td>";
             }
 
             var eValue = eval("jsonObj."+ key);
@@ -714,6 +723,7 @@
             }
             keyArray.sort();
             keyArray.unshift("序号");
+            keyArray.unshift("checkbox");
             return keyArray;
         }
         function showTableFromJsonFormat(data) {
@@ -879,24 +889,37 @@
                 trObj.style.cssText = whiteStyle;
                 obj.id = id.substring(9);
             }
-            //alert(obj.id);
-            /*
-            if (id % 2 == 0) {
-                trObj.style.cssText = blueStyle;
-            } else {
-                trObj.style.cssText = whiteStyle;
-            }*/
-            /*
-            for (var index = 0; index < tr.length; index++) {
-                //alert(tr[index].id);
-                if (tr[index].id == id) {
+            globalRowId = id;
+        }
+        function onSelectAllOrCancel(obj) {
+            // alert(obj.checked);
+            var tr = document.getElementsByTagName("tr");
+            var blueStyle = "background-color:#AAF";
+            var whiteStyle = "background-color:#FFF";
+            for (var index = 1; index < tr.length; index++) {
+                var checkBox = tr[index].childNodes[0].childNodes[0];
+                // alert(checkBox.checked);
+                checkBox.checked = obj.checked;
+                if (obj.checked) {
                     tr[index].style.cssText = blueStyle;
                 } else {
                     tr[index].style.cssText = whiteStyle;
                 }
-            }*/
-            globalRowId = id;
+            }
         }
+
+        function onCheckBoxClick(obj) {
+            var trObj = obj.parentNode.parentNode;
+            // alert(trObj);
+            var blueStyle = "background-color:#AAF";
+            var whiteStyle = "background-color:#FFF";
+            if (obj.checked) {
+                trObj.style.cssText = blueStyle;
+            } else {
+                trObj.style.cssText = whiteStyle;
+            }
+        }
+
         /*
         *json 生成表格形式,暂时没有使用
         */
