@@ -648,9 +648,6 @@
                     dataType: 'JSON',
                     success : function (data, status) {
                         if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
-                        if (data.length == undefined && data.error == 0) {
-                            data = data.list;
-                        }
                         onDataResponse(data, status);
                     },
                     error: function(obj, e, e2) {
@@ -659,7 +656,7 @@
                         }
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
-                        document.getElementById('show_result').innerText = e2;
+                        document.getElementById('show_result').innerText = obj.responseText;
                     }
                 }
             );
@@ -694,27 +691,27 @@
         }
         function displayResultData(data, status) {
             //alert(data);
+            document.getElementById('show_result').innerHTML = "";
             clearInterval(interval);
             interval = 0;
             var tmpObj = data;
+            var noneTableData = "";
+            if (data.length == undefined && data.error == 0) {
+                noneTableData = showSingleDataFromJson(data);
+                tmpObj = data.list;
+            }
 
             if (tmpObj.length > 0 && globalNeedRecreateSelect) {
                 createSelectValues(tmpObj);
                 globalNeedRecreateSelect = true;
             }
             if (document.getElementById("loadmode").checked) {
-                showTableFromJsonFormat1(tmpObj);
+                showTableFromJsonFormat1(tmpObj, noneTableData);
             } else {
-                showTableFromJsonFormat2(tmpObj);
+                showTableFromJsonFormat2(tmpObj, noneTableData);
             }
             
             showStatusInfo();
-
-            if (data.length == undefined) {
-                showJsonObj(data);
-            } else {
-            
-            }
         }
         function generateKeyArray(jsonObj) {
             var keyArray = new Array();
@@ -727,7 +724,6 @@
             return keyArray;
         }
         function showTableFromJsonFormat(data) {
-
             var count = data.length;
             var fields = generateKeyArray(data[0]);
             var strTable = "<table id='datatable' align=left class='table' border='1'>";
@@ -745,7 +741,30 @@
             strTable += "</table>"
             document.getElementById('show_result').innerHTML = strTable;
         }
-        function showTableFromJsonFormat1(data) {
+
+        function showSingleDataFromJson(data) {
+            var strTable = "<table id='datatable' align=left class='table' border='1'>";
+            for(var key in data) {
+                strTable += "<tr>";
+                if (!isJson(data[key])) {
+                    value = eval('('+data[key]+')');
+                } else {
+                    value = data[key];
+                }
+                if (value.length == undefined) {
+                    strTable += "<td>" + key + "</td>";
+                    strTable += "<td>" + value + "</td>";
+                } else {
+                    strTable += "<td>" + key + "</td>";
+                    strTable += "<td>table</td>";
+                }
+                //alert(key + " : " + value.length);
+            }
+            strTable += "</table>"
+            return strTable;
+            //alert(strTable);
+        }
+        function showTableFromJsonFormat1(data, noneTableData) {
             document.getElementById('show_result').innerHTML = "";
             var count = data.length;
             if (count == undefined) {
@@ -771,13 +790,13 @@
                 if (row >= count + 1) {
                     showStatusInfo();
                     strTable += "</table>"
-                    document.getElementById('show_result').innerHTML = strTable;
+                    document.getElementById('show_result').innerHTML = noneTableData + strTable;
                     pObj.close();
                 } else {
                     if (golbalStopProcessing) {
                         showStatusInfo();
                         strTable += "</table>"
-                        document.getElementById('show_result').innerHTML = strTable;
+                        document.getElementById('show_result').innerHTML = noneTableData + strTable;
                     } else {
                         setTimeout(showEveryRow, 0);
                     }
@@ -790,8 +809,7 @@
         function getType(o) { 
             var _t; return ((_t = typeof(o)) == "object" ? o==null && "null" || Object.prototype.toString.call(o).slice(8,-1):_t);//.toLowerCase(); 
         }
-        function showTableFromJsonFormat2(data) {
-            document.getElementById('show_result').innerHTML = "";
+        function showTableFromJsonFormat2(data, noneTableData) {
             var count = data.length;
             var fields = generateKeyArray(data[0]);
             var tableObj = document.createElement('table');
@@ -1312,7 +1330,7 @@
                         }
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
-                        document.getElementById('show_result').innerText = e2;
+                        document.getElementById('show_result').innerText = obj.responseText;
                     }
                 }
             );
