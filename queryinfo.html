@@ -204,6 +204,33 @@
             golbalStopProcessing = false;
             return op;
         }
+        function createIframeForResult(src) {
+            var w = $("#result_layout").width();
+            var h = $("#result_layout").height();
+            var t = $("#result_layout").offset().top;
+            var l = $("#result_layout").offset().left;
+            var index = $("#result_layout").css("z-index");
+            // alert("w : " + w + " , h : " + h + " , top : " + t + " , left : " + l + " , index : " + index);
+            var styleStr = "top:" + t + "px;left:" + l + "px;position:absolute;z-index:10000;background:#FFF;width:" + w + "px;height:" + h + "px;overflow:auto;";
+            var isIe = (document.all) ? true : false;
+            var isIE6 = isIe && !window.XMLHttpRequest;
+            styleStr += (isIe) ? "filter:alpha(opacity=80);" : "opacity:0.8;";
+            var divele = $("<iframe></iframe>");
+            divele.attr("id", "iframe");
+            divele.attr("src", src);
+            // divele.css({"top":t + 'px',"left":l + 'px', "position":"absolute", "z-index":"10000", "background":"#888", "width":w + 'px', "height":h + 'px', "overflow":"auto"});
+            divele.attr("style", styleStr);
+            divele.show().appendTo("body");
+            // alert(divele);
+            $("#result_layout").hide();
+        }
+        function showResultLayout() {
+             try {
+                $("#iframe").remove();
+                $("#result_layout").show();
+            } catch(e) {
+            }
+        }
     </script>
     <script>
         /**
@@ -634,6 +661,16 @@
             var tips = "<font size=3>" + globalInfo + " <br>正在加载... " + s + "s" + "</font>";
             document.getElementById('show_title').innerHTML = tips;
         }
+        String.prototype.startsWith = function(str) {
+            return this.substr(0, str.length) == str;
+        };
+        function addHttpIfNeed() {
+            if (globalUrl != null && globalUrl != "") {
+                if (!globalUrl.startsWith("http://")) {
+                    globalUrl = "http://" + globalUrl;
+                }
+            }
+        }
         function requestUrl() {
             s = 0;
             if (interval != 0) {
@@ -646,6 +683,8 @@
             if (ajaxRequest != null) {
                 ajaxRequest.abort();
             }
+            addHttpIfNeed();
+            showResultLayout();
             ajaxRequest = $.ajax(
                 {
                     url : globalUrl,
@@ -662,7 +701,8 @@
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
                         document.getElementById('shownonttable').innerHTML = "";
-                        document.getElementById('show_result').innerText = obj.responseText;
+                        document.getElementById('show_result').innerText = "";//obj.responseText;
+                        createIframeForResult(globalUrl);
                     }
                 }
             );
@@ -691,6 +731,7 @@
             }
             return tmpObj;
         }
+
         function onDataResponse(data, status) {
             if (!isJson(data)) data = eval('('+data+')');//将字符串转换成json格式
             displayResultData(data, status);
@@ -1361,6 +1402,8 @@
             if (ajaxRequest != null) {
                 ajaxRequest.abort();
             }
+            addHttpIfNeed();
+            showResultLayout();
             ajaxRequest = $.ajax(
                 {
                     url : globalUrl,
@@ -1375,13 +1418,16 @@
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
                         document.getElementById('shownonttable').innerHTML = "";
-                        document.getElementById('show_result').innerText = obj.responseText;
+                        document.getElementById('show_result').innerText = "";//obj.responseText;
+                        createIframeForResult(globalUrl);
                     }
                 }
             );
         }
         function test() {
-            confirm("");
+            var sel = document.body.createTextRange();
+            sel.select();
+            //alert(sel.htmlText);
         }
     </script>
 </head>
@@ -1397,7 +1443,7 @@
 <input type="checkbox" id="use_extradata" checked/>显示额外数据<br>
 <input type="checkbox" id="remove_dup" value="checkbox"/>按字段名去重<br>
 <label style="float:left;">字段名</label>
-<input type="text" style="float:left;width:75%;" id="search_field" readonly/>
+<input type="text" style="float:left;width:75%;" onclick="onTextClick(this);" onfocus="onTextFocus(this);" id="search_field" readonly/>
 <br>
 <label style="float:left;">关键字</label>
 <input type="text" style="float:left;width:75%;" onclick="onTextClick(this);" onfocus="onTextFocus(this);" id="search_keywords"/><br>
@@ -1486,7 +1532,7 @@
     </div>
 </div>
 
-<div class="div-b">
+<div id="result_layout" class="div-b">
 <div id="shownonttable" style="width:100%"></div>
 <div id="show_result"></div>
 </div>
