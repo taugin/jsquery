@@ -761,6 +761,18 @@
         Obj.value = "";
         requestMarketData();
     }
+    
+    var urlFocused = false;
+    function onurlfocus(obj) {
+        urlFocused = true;
+    }
+    
+    function onurlclick(obj) {
+        if (urlFocused) {
+            urlFocused = false;
+            obj.select();
+        }
+    }
     </script>
 </head>
 <body onload="showjsonresult();">
@@ -779,7 +791,7 @@
 </div>
 <div class="div-e">
     <div style="float:left;background-color:#FFF;">
-        <input type="text" id="json_url_addr" style="float:left;width:700px" placeholder="ÇëÊäÈëjson URL" onkeyup="onkeyupfunc1();" value="http://wlan.anzhuoshangdian.com/v1/gethomelist/type=2?page=1&pagesize=20"></input>
+        <input type="text" id="json_url_addr" style="float:left;width:700px" placeholder="ÇëÊäÈëjson URL" onkeyup="onkeyupfunc1();" onclick="onurlclick(this);" onfocus="onurlfocus(this);" value="http://wlan.anzhuoshangdian.com/v1/gethomelist/type=2?page=1&pagesize=20"></input>
         <select id="market_url" onchange="selectonchange(this.value)" >
             <option value="homelist_type2">homelist_type2</option>
             <option value="gameranklist">gameranklist</option>

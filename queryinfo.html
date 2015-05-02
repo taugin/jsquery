@@ -557,7 +557,12 @@
                 return "<td><font size=3 color='red'>" + realRow + "</font></td>";
             }
 
-            var eValue = eval("jsonObj."+ key);
+            var eValue = null;
+            try {
+                eValue = eval("jsonObj."+ key);
+            } catch(e) {
+                eValue = "<font color=red>ParseError</font>";
+            }
             
             if (eValue == null) {
                 eValue = "";
@@ -656,6 +661,7 @@
                         }
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
+                        document.getElementById('shownonttable').innerHTML = "";
                         document.getElementById('show_result').innerText = obj.responseText;
                     }
                 }
@@ -692,13 +698,13 @@
         function displayResultData(data, status) {
             //alert(data);
             document.getElementById('show_result').innerHTML = "";
+            document.getElementById('shownonttable').innerHTML = "";
             clearInterval(interval);
             interval = 0;
             var tmpObj = data;
             var noneTableData = "";
-            if (data.length == undefined && data.error == 0) {
-                noneTableData = showSingleDataFromJson(data);
-                tmpObj = data.list;
+            if (data.length == undefined) {
+                tmpObj = showSingleDataFromJson(data);
             }
 
             if (tmpObj.length > 0 && globalNeedRecreateSelect) {
@@ -706,9 +712,9 @@
                 globalNeedRecreateSelect = true;
             }
             if (document.getElementById("loadmode").checked) {
-                showTableFromJsonFormat1(tmpObj, noneTableData);
+                showTableFromJsonFormat1(tmpObj);
             } else {
-                showTableFromJsonFormat2(tmpObj, noneTableData);
+                showTableFromJsonFormat2(tmpObj);
             }
             
             showStatusInfo();
@@ -743,7 +749,9 @@
         }
 
         function showSingleDataFromJson(data) {
-            var strTable = "<table id='datatable' align=left class='table' border='1'>";
+            var tableList = null;
+            var tableData = "";
+            var strTable = "<table align=left class='table' border='1'>";
             for(var key in data) {
                 strTable += "<tr>";
                 if (!isJson(data[key])) {
@@ -755,20 +763,29 @@
                     strTable += "<td>" + key + "</td>";
                     strTable += "<td>" + value + "</td>";
                 } else {
-                    strTable += "<td>" + key + "</td>";
-                    strTable += "<td>table</td>";
+                    tableData += "<tr>";
+                    tableData += "<td>" + key + "</td>";
+                    tableData += "<td>" + value.length + "</td>";
+                    tableData += "</tr>";
+                    tableList = value;
                 }
+                strTable += "</tr>";
                 //alert(key + " : " + value.length);
             }
-            strTable += "</table>"
-            return strTable;
-            //alert(strTable);
+            strTable += tableData;
+            strTable += "</table>";
+            // alert(strTable);
+            document.getElementById('shownonttable').innerHTML = strTable;
+            return tableList;
         }
-        function showTableFromJsonFormat1(data, noneTableData) {
+        function showTableFromJsonFormat1(data) {
             document.getElementById('show_result').innerHTML = "";
             var count = data.length;
             if (count == undefined) {
                 count = 0;
+            }
+            if (count <= 0) {
+                return ;
             }
             var fields = generateKeyArray(data[0]);
             var strTable = "<table id='datatable' align=left class='table' border='1'>";
@@ -790,13 +807,13 @@
                 if (row >= count + 1) {
                     showStatusInfo();
                     strTable += "</table>"
-                    document.getElementById('show_result').innerHTML = noneTableData + strTable;
+                    document.getElementById('show_result').innerHTML = strTable;
                     pObj.close();
                 } else {
                     if (golbalStopProcessing) {
                         showStatusInfo();
                         strTable += "</table>"
-                        document.getElementById('show_result').innerHTML = noneTableData + strTable;
+                        document.getElementById('show_result').innerHTML = strTable;
                     } else {
                         setTimeout(showEveryRow, 0);
                     }
@@ -809,8 +826,14 @@
         function getType(o) { 
             var _t; return ((_t = typeof(o)) == "object" ? o==null && "null" || Object.prototype.toString.call(o).slice(8,-1):_t);//.toLowerCase(); 
         }
-        function showTableFromJsonFormat2(data, noneTableData) {
+        function showTableFromJsonFormat2(data) {
             var count = data.length;
+            if (count == undefined) {
+                count = 0;
+            }
+            if (count <= 0) {
+                return ;
+            }
             var fields = generateKeyArray(data[0]);
             var tableObj = document.createElement('table');
             tableObj.id = "datatable";
@@ -826,6 +849,7 @@
                 }
                 //alert(getType(trObj));
                 trObj.innerHTML = strTable;
+
                 tableObj.appendChild(trObj);
                 if (row > 0) {
                     var statusText = "正在生成第" + row + "行";
@@ -912,17 +936,18 @@
         }
         function onSelectAllOrCancel(obj) {
             // alert(obj.checked);
-            var tr = document.getElementsByTagName("tr");
+            var tableObj = document.getElementById("datatable");
+            var len = tableObj.rows.length;
             var blueStyle = "background-color:#AAF";
             var whiteStyle = "background-color:#FFF";
-            for (var index = 1; index < tr.length; index++) {
-                var checkBox = tr[index].childNodes[0].childNodes[0];
+            for (var index = 1; index < len; index++) {
+                var checkBox = tableObj.rows[index].cells[0].childNodes[0];
                 // alert(checkBox.checked);
                 checkBox.checked = obj.checked;
                 if (obj.checked) {
-                    tr[index].style.cssText = blueStyle;
+                    tableObj.rows[index].style.cssText = blueStyle;
                 } else {
-                    tr[index].style.cssText = whiteStyle;
+                    tableObj.rows[index].style.cssText = whiteStyle;
                 }
             }
         }
@@ -1194,6 +1219,25 @@
             }
         }
 
+        var urlFocused = false;
+        function onTextFocus(obj) {
+            urlFocused = true;
+        }
+        
+        function onTextClick(obj) {
+            if (urlFocused) {
+                urlFocused = false;
+                obj.select();
+            }
+        }
+        function isFocus(){
+            if(document.activeElement.id=='json_url_addr'){
+                alert('json_url_addr获得焦点');
+            }
+            else{
+                alert('json_url_addr未获得焦点');
+            }
+        }
         function loadmodeclick() {
             var loadmode = document.getElementById("loadmode");
             //alert(loadmode.checked);
@@ -1330,6 +1374,7 @@
                         }
                         //alert(obj.status + " : " + e + " : " + e2);
                         //alert(e2);
+                        document.getElementById('shownonttable').innerHTML = "";
                         document.getElementById('show_result').innerText = obj.responseText;
                     }
                 }
@@ -1355,7 +1400,7 @@
 <input type="text" style="float:left;width:75%;" id="search_field" readonly/>
 <br>
 <label style="float:left;">关键字</label>
-<input type="text" style="float:left;width:75%;" id="search_keywords"/><br>
+<input type="text" style="float:left;width:75%;" onclick="onTextClick(this);" onfocus="onTextFocus(this);" id="search_keywords"/><br>
 <input type="button" value="清除" onclick="clear_search();"/>
 
 <br>
@@ -1367,7 +1412,7 @@
 </select>
 <br>
 <label>Limit</label>
-<input type="text" id="limit" placeholder="limit" onkeyup="return ValidateNumber(this, value);" value="100"/>
+<input type="text" id="limit" placeholder="limit" onclick="onTextClick(this);" onfocus="onTextFocus(this);" onkeyup="return ValidateNumber(this, value);" value="100"/>
 </div>
 <br>
 <div class="div-c">
@@ -1421,8 +1466,8 @@
 <br>
     <div class="div-c">
     <label>时间格式转换</label><br>
-    <input type="text" id="longtime" value="" placeholder="请输入长整形时间"/><br>
-    <input type="text" id="stringtime" value="" readonly="readonly"/>
+    <input type="text" id="longtime" value="" onclick="onTextClick(this);" onfocus="onTextFocus(this);" placeholder="请输入长整形时间"/><br>
+    <input type="text" id="stringtime" value="" onclick="onTextClick(this);" onfocus="onTextFocus(this);" readonly="readonly"/>
     <input type="button" id="translate_time" value="转换" onclick="translateTime();"/>
     </div>
     <input type="button" id="test" value="Test" onclick="test();"/>
@@ -1430,8 +1475,8 @@
 
 <div class="div-e">
     <div style="float:left;width:90%;background-color:#888;">
-        <textarea id="sql_input" style="width:100%;height:66px;" placeholder="输入SQL"></textarea>
-        <input type="text" id="json_url_addr" style="float:left;width:100%;" onkeyup="onurlkeyup();" placeholder="请输入json URL"/>
+        <textarea id="sql_input" style="width:100%;height:66px;" onclick="onTextClick(this);" onfocus="onTextFocus(this);" placeholder="输入SQL"></textarea>
+        <input type="text" id="json_url_addr" style="float:left;width:100%;" onkeyup="onurlkeyup();" onclick="onTextClick(this);" onfocus="onTextFocus(this);" placeholder="请输入json URL"/>
     </div>
     <div style="float:right;width='88px';background-color:#888">
         <input type="button" id="exec_sql" style="width:88px" value="执行SQL" onclick="exec_sql();"/><br>
@@ -1441,6 +1486,9 @@
     </div>
 </div>
 
-<div id="show_result" class="div-b"></div>
+<div class="div-b">
+<div id="shownonttable" style="width:100%"></div>
+<div id="show_result"></div>
+</div>
 </body>
 </html>
